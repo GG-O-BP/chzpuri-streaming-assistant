@@ -1,20 +1,287 @@
-import { useState, useEffect, useRef } from "react";
+import { useReducer, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import "./ChzzkChat.css";
 
+// 상태 타입 정의
+const ActionTypes = {
+    SET_CHANNEL_ID: "SET_CHANNEL_ID",
+    SET_CONNECTED: "SET_CONNECTED",
+    ADD_MESSAGE: "ADD_MESSAGE",
+    CLEAR_MESSAGES: "CLEAR_MESSAGES",
+    SET_ERROR: "SET_ERROR",
+    CLEAR_ERROR: "CLEAR_ERROR",
+};
+
+// 초기 상태
+const initialState = {
+    channelId: "",
+    isConnected: false,
+    messages: [],
+    error: "",
+};
+
+// 메시지 생성
+const createChatMessage = (event) => ({
+    type: "chat",
+    id: event.uid,
+    nickname: event.nickname,
+    message: event.msg,
+    time: new Date(event.msgTime),
+    profile: event.profile,
+});
+
+const createDonationMessage = (event) => ({
+    type: "donation",
+    id: event.uid,
+    nickname: event.nickname || "익명의 후원자",
+    message: event.msg || "",
+    amount: event.extras.payAmount,
+    time: new Date(event.msgTime),
+    profile: event.profile,
+});
+
+const createSystemMessage = (event) => ({
+    type: "system",
+    id: event.uid,
+    message: event.extras.description,
+    time: new Date(event.msgTime),
+});
+
+const createConnectedMessage = () => ({
+    type: "system",
+    id: `connected-${Date.now()}`,
+    message: "채팅에 연결되었습니다.",
+    time: new Date(),
+});
+
+const createDisconnectedMessage = () => ({
+    type: "system",
+    id: `disconnected-${Date.now()}`,
+    message: "채팅 연결이 끊어졌습니다.",
+    time: new Date(),
+});
+
+// 메시지 중복 체크
+const isDuplicateMessage = (messages, messageId) =>
+    messages.some((msg) => msg.id === messageId);
+
+// 리듀서
+const chatReducer = (state, action) => {
+    switch (action.type) {
+        case ActionTypes.SET_CHANNEL_ID:
+            return { ...state, channelId: action.payload };
+
+        case ActionTypes.SET_CONNECTED:
+            return { ...state, isConnected: action.payload };
+
+        case ActionTypes.ADD_MESSAGE:
+            if (isDuplicateMessage(state.messages, action.payload.id)) {
+                return state;
+            }
+            return {
+                ...state,
+                messages: [...state.messages, action.payload],
+            };
+
+        case ActionTypes.CLEAR_MESSAGES:
+            return { ...state, messages: [] };
+
+        case ActionTypes.SET_ERROR:
+            return { ...state, error: action.payload };
+
+        case ActionTypes.CLEAR_ERROR:
+            return { ...state, error: "" };
+
+        default:
+            return state;
+    }
+};
+
+// 시간 포맷팅
+const formatTime = (date) =>
+    date.toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
+
+// 메시지 렌더링 데이터 생성
+const createMessageRenderData = (msg) => {
+    switch (msg.type) {
+        case "chat":
+            return {
+                className: "chat-message",
+                elements: [
+                    { type: "time", content: formatTime(msg.time) },
+                    msg.profile?.badge && {
+                        type: "badge",
+                        src: msg.profile.badge.imageUrl,
+                    },
+                    { type: "nickname", content: msg.nickname },
+                    { type: "separator", content: ":" },
+                    { type: "message", content: msg.message },
+                ].filter(Boolean),
+            };
+
+        case "donation":
+            return {
+                className: "donation-message",
+                elements: [
+                    { type: "time", content: formatTime(msg.time) },
+                    { type: "icon", content: "💰" },
+                    { type: "nickname", content: msg.nickname },
+                    {
+                        type: "amount",
+                        content: `님이 ${msg.amount.toLocaleString()}원 후원!`,
+                    },
+                    msg.message && { type: "message", content: msg.message },
+                ].filter(Boolean),
+            };
+
+        case "system":
+            return {
+                className: "system-message",
+                elements: [
+                    { type: "time", content: formatTime(msg.time) },
+                    { type: "message", content: msg.message },
+                ],
+            };
+
+        default:
+            return null;
+    }
+};
+
+// 메시지 렌더링
+const MessageComponent = ({ message, index }) => {
+    const renderData = createMessageRenderData(message);
+    if (!renderData) return null;
+
+    return (
+        <div key={index} className={renderData.className}>
+            {renderData.elements.map((element, idx) => {
+                switch (element.type) {
+                    case "time":
+                        return (
+                            <span key={idx} className="time">
+                                [{element.content}]
+                            </span>
+                        );
+                    case "badge":
+                        return (
+                            <img
+                                key={idx}
+                                src={element.src}
+                                alt="badge"
+                                className="user-badge"
+                            />
+                        );
+                    case "nickname":
+                        return (
+                            <span key={idx} className="nickname">
+                                {element.content}
+                            </span>
+                        );
+                    case "separator":
+                        return (
+                            <span key={idx} className="separator">
+                                {element.content}
+                            </span>
+                        );
+                    case "message":
+                        return (
+                            <span key={idx} className="message">
+                                {element.content}
+                            </span>
+                        );
+                    case "icon":
+                        return (
+                            <span key={idx} className="donation-icon">
+                                {element.content}
+                            </span>
+                        );
+                    case "amount":
+                        return (
+                            <span key={idx} className="amount">
+                                {element.content}
+                            </span>
+                        );
+                    default:
+                        return null;
+                }
+            })}
+        </div>
+    );
+};
+
+// 커스텀 훅: 이벤트 핸들러 생성
+const useEventHandlers = (dispatch) => {
+    const handleChatEvent = useCallback(
+        (event) => {
+            const message = createChatMessage(event);
+            dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+        },
+        [dispatch],
+    );
+
+    const handleDonationEvent = useCallback(
+        (event) => {
+            const message = createDonationMessage(event);
+            dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+        },
+        [dispatch],
+    );
+
+    const handleSystemMessageEvent = useCallback(
+        (event) => {
+            const message = createSystemMessage(event);
+            dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+        },
+        [dispatch],
+    );
+
+    const handleConnectedEvent = useCallback(() => {
+        dispatch({ type: ActionTypes.SET_CONNECTED, payload: true });
+        dispatch({ type: ActionTypes.CLEAR_ERROR });
+        const message = createConnectedMessage();
+        dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+    }, [dispatch]);
+
+    const handleDisconnectedEvent = useCallback(() => {
+        dispatch({ type: ActionTypes.SET_CONNECTED, payload: false });
+        const message = createDisconnectedMessage();
+        dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+    }, [dispatch]);
+
+    const handleErrorEvent = useCallback(
+        (message) => {
+            dispatch({ type: ActionTypes.SET_ERROR, payload: message });
+        },
+        [dispatch],
+    );
+
+    return {
+        handleChatEvent,
+        handleDonationEvent,
+        handleSystemMessageEvent,
+        handleConnectedEvent,
+        handleDisconnectedEvent,
+        handleErrorEvent,
+    };
+};
+
+// 메인 컴포넌트
 function ChzzkChat() {
-    const [channelId, setChannelId] = useState("");
-    const [isConnected, setIsConnected] = useState(false);
-    const [messages, setMessages] = useState([]);
-    const [error, setError] = useState("");
+    const [state, dispatch] = useReducer(chatReducer, initialState);
     const messagesEndRef = useRef(null);
     const unlistenRef = useRef(null);
 
+    const eventHandlers = useEventHandlers(dispatch);
+
+    // 부작용: 이벤트 리스너 설정
     useEffect(() => {
-        // 채팅 이벤트 리스너 설정
         const setupListener = async () => {
-            // 기존 리스너가 있다면 먼저 제거
             if (unlistenRef.current) {
                 unlistenRef.current();
                 unlistenRef.current = null;
@@ -25,124 +292,22 @@ function ChzzkChat() {
 
                 switch (chatEvent.type) {
                     case "chat":
-                        setMessages((prev) => {
-                            // 중복 체크
-                            if (prev.some((msg) => msg.id === chatEvent.uid)) {
-                                return prev;
-                            }
-                            return [
-                                ...prev,
-                                {
-                                    type: "chat",
-                                    id: chatEvent.uid,
-                                    nickname: chatEvent.nickname,
-                                    message: chatEvent.msg,
-                                    time: new Date(chatEvent.msgTime),
-                                    profile: chatEvent.profile,
-                                },
-                            ];
-                        });
+                        eventHandlers.handleChatEvent(chatEvent);
                         break;
-
                     case "donation":
-                        setMessages((prev) => {
-                            // 중복 체크
-                            if (prev.some((msg) => msg.id === chatEvent.uid)) {
-                                return prev;
-                            }
-                            return [
-                                ...prev,
-                                {
-                                    type: "donation",
-                                    id: chatEvent.uid,
-                                    nickname:
-                                        chatEvent.nickname || "익명의 후원자",
-                                    message: chatEvent.msg || "",
-                                    amount: chatEvent.extras.payAmount,
-                                    time: new Date(chatEvent.msgTime),
-                                    profile: chatEvent.profile,
-                                },
-                            ];
-                        });
+                        eventHandlers.handleDonationEvent(chatEvent);
                         break;
-
                     case "systemMessage":
-                        setMessages((prev) => {
-                            // 중복 체크
-                            if (prev.some((msg) => msg.id === chatEvent.uid)) {
-                                return prev;
-                            }
-                            return [
-                                ...prev,
-                                {
-                                    type: "system",
-                                    id: chatEvent.uid,
-                                    message: chatEvent.extras.description,
-                                    time: new Date(chatEvent.msgTime),
-                                },
-                            ];
-                        });
+                        eventHandlers.handleSystemMessageEvent(chatEvent);
                         break;
-
                     case "connected":
-                        setIsConnected(true);
-                        setError("");
-                        setMessages((prev) => {
-                            const id = `connected-${Date.now()}`;
-                            // 최근 1초 이내에 동일한 메시지가 있는지 확인
-                            const recentConnected = prev.some(
-                                (msg) =>
-                                    msg.type === "system" &&
-                                    msg.message === "채팅에 연결되었습니다." &&
-                                    new Date().getTime() - msg.time.getTime() <
-                                        1000,
-                            );
-                            if (recentConnected) {
-                                return prev;
-                            }
-                            return [
-                                ...prev,
-                                {
-                                    type: "system",
-                                    id,
-                                    message: "채팅에 연결되었습니다.",
-                                    time: new Date(),
-                                },
-                            ];
-                        });
+                        eventHandlers.handleConnectedEvent();
                         break;
-
                     case "disconnected":
-                        console.log("Received disconnected event");
-                        setIsConnected(false);
-                        setMessages((prev) => {
-                            const id = `disconnected-${Date.now()}`;
-                            // 최근 1초 이내에 동일한 메시지가 있는지 확인
-                            const recentDisconnected = prev.some(
-                                (msg) =>
-                                    msg.type === "system" &&
-                                    msg.message ===
-                                        "채팅 연결이 끊어졌습니다." &&
-                                    new Date().getTime() - msg.time.getTime() <
-                                        1000,
-                            );
-                            if (recentDisconnected) {
-                                return prev;
-                            }
-                            return [
-                                ...prev,
-                                {
-                                    type: "system",
-                                    id,
-                                    message: "채팅 연결이 끊어졌습니다.",
-                                    time: new Date(),
-                                },
-                            ];
-                        });
+                        eventHandlers.handleDisconnectedEvent();
                         break;
-
                     case "error":
-                        setError(chatEvent.message);
+                        eventHandlers.handleErrorEvent(chatEvent.message);
                         break;
                 }
             });
@@ -150,102 +315,70 @@ function ChzzkChat() {
 
         setupListener();
 
-        // 클린업
         return () => {
             if (unlistenRef.current) {
                 unlistenRef.current();
                 unlistenRef.current = null;
             }
         };
-    }, []);
+    }, [eventHandlers]);
 
+    // 자동 스크롤
     useEffect(() => {
-        // 새 메시지가 추가될 때 스크롤을 맨 아래로
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+    }, [state.messages]);
 
-    const handleConnect = async () => {
-        if (!channelId.trim()) {
-            setError("채널 ID를 입력해주세요.");
+    // 이벤트 핸들러
+    const handleChannelIdChange = useCallback(
+        (e) => {
+            dispatch({
+                type: ActionTypes.SET_CHANNEL_ID,
+                payload: e.target.value,
+            });
+        },
+        [dispatch],
+    );
+
+    const handleConnect = useCallback(async () => {
+        const trimmedChannelId = state.channelId.trim();
+
+        if (!trimmedChannelId) {
+            dispatch({
+                type: ActionTypes.SET_ERROR,
+                payload: "채널 ID를 입력해주세요.",
+            });
             return;
         }
 
+        dispatch({ type: ActionTypes.CLEAR_ERROR });
+
         try {
-            setError("");
-            await invoke("connect_chzzk_chat", { channelId: channelId.trim() });
+            await invoke("connect_chzzk_chat", { channelId: trimmedChannelId });
         } catch (err) {
-            setError(err.toString());
+            dispatch({
+                type: ActionTypes.SET_ERROR,
+                payload: err.toString(),
+            });
         }
-    };
+    }, [state.channelId]);
 
-    const handleDisconnect = async () => {
-        console.log("Disconnect button clicked");
+    const handleDisconnect = useCallback(async () => {
         try {
-            console.log("Calling disconnect_chzzk_chat...");
-            const result = await invoke("disconnect_chzzk_chat");
-            console.log("Disconnect result:", result);
-            setMessages([]);
-            console.log("Messages cleared");
+            await invoke("disconnect_chzzk_chat");
+            dispatch({ type: ActionTypes.CLEAR_MESSAGES });
         } catch (err) {
-            console.error("Disconnect error:", err);
-            setError(err.toString());
+            dispatch({
+                type: ActionTypes.SET_ERROR,
+                payload: err.toString(),
+            });
         }
-    };
+    }, []);
 
-    const formatTime = (date) => {
-        return date.toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-        });
-    };
-
-    const renderMessage = (msg, index) => {
-        switch (msg.type) {
-            case "chat":
-                return (
-                    <div key={index} className="chat-message">
-                        <span className="time">[{formatTime(msg.time)}]</span>
-                        {msg.profile?.badge && (
-                            <img
-                                src={msg.profile.badge.imageUrl}
-                                alt="badge"
-                                className="user-badge"
-                            />
-                        )}
-                        <span className="nickname">{msg.nickname}</span>
-                        <span className="separator">:</span>
-                        <span className="message">{msg.message}</span>
-                    </div>
-                );
-
-            case "donation":
-                return (
-                    <div key={index} className="donation-message">
-                        <span className="time">[{formatTime(msg.time)}]</span>
-                        <span className="donation-icon">💰</span>
-                        <span className="nickname">{msg.nickname}</span>
-                        <span className="amount">
-                            님이 {msg.amount.toLocaleString()}원 후원!
-                        </span>
-                        {msg.message && (
-                            <span className="message">{msg.message}</span>
-                        )}
-                    </div>
-                );
-
-            case "system":
-                return (
-                    <div key={index} className="system-message">
-                        <span className="time">[{formatTime(msg.time)}]</span>
-                        <span className="message">{msg.message}</span>
-                    </div>
-                );
-
-            default:
-                return null;
-        }
-    };
+    // 연결 상태 텍스트
+    const connectionStatusText = state.isConnected ? "연결됨" : "연결 안 됨";
+    const connectionStatusClass = state.isConnected
+        ? "connected"
+        : "disconnected";
 
     return (
         <div className="chzzk-chat-container">
@@ -253,9 +386,9 @@ function ChzzkChat() {
                 <h2>치지직 채팅</h2>
                 <div className="connection-status">
                     <span
-                        className={`status-indicator ${isConnected ? "connected" : "disconnected"}`}
+                        className={`status-indicator ${connectionStatusClass}`}
                     ></span>
-                    <span>{isConnected ? "연결됨" : "연결 안 됨"}</span>
+                    <span>{connectionStatusText}</span>
                 </div>
             </div>
 
@@ -263,14 +396,11 @@ function ChzzkChat() {
                 <input
                     type="text"
                     placeholder="채널 ID 입력"
-                    value={channelId}
-                    onChange={(e) => setChannelId(e.target.value)}
-                    onKeyPress={(e) =>
-                        e.key === "Enter" && !isConnected && handleConnect()
-                    }
-                    disabled={isConnected}
+                    value={state.channelId}
+                    onChange={handleChannelIdChange}
+                    disabled={state.isConnected}
                 />
-                {!isConnected ? (
+                {!state.isConnected ? (
                     <button onClick={handleConnect} className="connect-btn">
                         연결
                     </button>
@@ -284,10 +414,16 @@ function ChzzkChat() {
                 )}
             </div>
 
-            {error && <div className="error-message">{error}</div>}
+            {state.error && <div className="error-message">{state.error}</div>}
 
             <div className="chat-messages">
-                {messages.map((msg, index) => renderMessage(msg, index))}
+                {state.messages.map((msg, index) => (
+                    <MessageComponent
+                        key={msg.id}
+                        message={msg}
+                        index={index}
+                    />
+                ))}
                 <div ref={messagesEndRef} />
             </div>
         </div>

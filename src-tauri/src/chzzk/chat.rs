@@ -477,8 +477,4 @@ impl ChzzkChat {
 
         println!("Disconnected from chat");
     }
-
-    pub async fn is_connected(&self) -> bool {
-        *self.is_connected.lock().await
-    }
 }
