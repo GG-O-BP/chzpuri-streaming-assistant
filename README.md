@@ -133,7 +133,7 @@ chzpuri-streaming-assistant/
 ```
 
 # 주요 기능 구현 상태 📊
-- [ ] 치지직 실시간 채팅 연동
+- [x] 치지직 실시간 채팅 연동
 - [ ] AI 맥락 분석 (ChatGPT/Claude)
 - [ ] 대화 스크립트 자동 생성
 - [ ] 타겟층 맞춤 코칭
