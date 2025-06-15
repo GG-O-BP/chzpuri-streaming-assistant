@@ -41,10 +41,10 @@
 git clone https://github.com/your-username/chzpuri-streaming-assistant.git
 cd chzpuri-streaming-assistant
 
-# Deno 설치 (아직 안했다면)
+# Deno 설치
 curl -fsSL https://deno.land/install.sh | sh
 
-# Tauri CLI 설치 (Rust 필요!)
+# Tauri CLI 설치
 cargo install tauri-cli --version "^2.0"
 
 # 의존성 설치
@@ -53,13 +53,13 @@ deno task install
 
 ## 개발 모드 실행
 ```bash
-# 개발 서버 시작 (딸기왕자님들 화이팅!)
+# 개발 서버 시작
 deno task tauri dev
 ```
 
 ## 프로덕션 빌드
 ```bash
-# 프로덕션 빌드 (사랑을 담아서~)
+# 프로덕션 빌드
 deno task tauri build
 ```
 

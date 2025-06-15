@@ -44,10 +44,10 @@ download the installer from [latest release](https://github.com/your-username/ch
 git clone https://github.com/your-username/chzpuri-streaming-assistant.git
 cd chzpuri-streaming-assistant
 
-# install Deno (if you haven't already~)
+# install Deno
 curl -fsSL https://deno.land/install.sh | sh
 
-# install Tauri CLI (needs Rust!!)
+# install Tauri CLI
 cargo install tauri-cli --version "^2.0"
 
 # install dependencies
@@ -56,13 +56,13 @@ deno task install
 
 ## Running in Dev Mode
 ```bash
-# start dev server (strawberry princes fighting!!)
+# start dev server
 deno task tauri dev
 ```
 
 ## Production Build
 ```bash
-# production build (made with love~♡)
+# production build
 deno task tauri build
 ```
 
