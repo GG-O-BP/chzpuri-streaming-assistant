@@ -218,17 +218,42 @@ const MessageComponent = ({ message, index }) => {
 // 커스텀 훅: 이벤트 핸들러 생성
 const useEventHandlers = (dispatch) => {
     const handleChatEvent = useCallback(
-        (event) => {
+        async (event) => {
             const message = createChatMessage(event);
             dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+
+            // AI 분석을 위해 백엔드로 메시지 전송
+            try {
+                await invoke("add_chat_message", {
+                    username: event.nickname,
+                    message: event.msg,
+                });
+            } catch (err) {
+                console.error("Failed to buffer message for AI:", err);
+            }
         },
         [dispatch],
     );
 
     const handleDonationEvent = useCallback(
-        (event) => {
+        async (event) => {
             const message = createDonationMessage(event);
             dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+
+            // 후원 메시지도 AI 분석에 포함
+            if (event.msg) {
+                try {
+                    await invoke("add_chat_message", {
+                        username: event.nickname || "익명의 후원자",
+                        message: `[후원 ${event.extras.payAmount}원] ${event.msg}`,
+                    });
+                } catch (err) {
+                    console.error(
+                        "Failed to buffer donation message for AI:",
+                        err,
+                    );
+                }
+            }
         },
         [dispatch],
     );

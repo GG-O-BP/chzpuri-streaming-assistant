@@ -1,6 +1,12 @@
+mod ai_service;
 mod chzzk;
 
+use ai_service::{
+    AIConfig, AIProvider, AIService, ChatMessage, ContextAnalysis, ScriptRecommendation,
+    TargetAudience,
+};
 use chzzk::ChzzkChat;
+use std::collections::VecDeque;
 use std::sync::Arc;
 use tauri::{AppHandle, State};
 use tokio::sync::RwLock;
@@ -29,6 +35,11 @@ pub enum ChzzkEvent {
 struct AppState {
     connection_state: ChzzkState,
     chat_instance: Option<ChzzkChat>,
+    ai_config: Option<AIConfig>,
+    ai_service: Option<AIService>,
+    chat_buffer: VecDeque<ChatMessage>,
+    target_audience: Option<TargetAudience>,
+    last_context_analysis: Option<ContextAnalysis>,
 }
 
 type SharedAppState = Arc<RwLock<AppState>>;
@@ -243,11 +254,188 @@ async fn get_chzzk_state(state: State<'_, SharedAppState>) -> Result<String, Str
     Ok(state_name.to_string())
 }
 
+// AI 설정 관련 커맨드
+#[tauri::command]
+async fn configure_ai(
+    provider: String,
+    api_key: String,
+    state: State<'_, SharedAppState>,
+) -> Result<String, String> {
+    let ai_provider = match provider.as_str() {
+        "chatgpt" => AIProvider::ChatGPT,
+        "claude" => AIProvider::Claude,
+        "gemini" => AIProvider::Gemini,
+        _ => return Err("Invalid AI provider".to_string()),
+    };
+
+    let ai_config = AIConfig {
+        provider: ai_provider.clone(),
+        api_key: api_key.clone(),
+        enabled: true,
+    };
+
+    let ai_service = AIService::new(ai_provider, api_key);
+
+    let mut app_state = state.write().await;
+    app_state.ai_config = Some(ai_config);
+    app_state.ai_service = Some(ai_service);
+
+    Ok("AI service configured successfully".to_string())
+}
+
+#[tauri::command]
+async fn set_target_audience(
+    age_range: String,
+    gender: String,
+    interests: Vec<String>,
+    content_type: String,
+    state: State<'_, SharedAppState>,
+) -> Result<String, String> {
+    let target_audience = TargetAudience {
+        age_range,
+        gender,
+        interests,
+        content_type,
+    };
+
+    let mut app_state = state.write().await;
+    app_state.target_audience = Some(target_audience);
+
+    Ok("Target audience configured".to_string())
+}
+
+#[tauri::command]
+async fn add_chat_message(
+    username: String,
+    message: String,
+    state: State<'_, SharedAppState>,
+) -> Result<(), String> {
+    let chat_message = ChatMessage {
+        username,
+        message,
+        timestamp: chrono::Utc::now().timestamp(),
+    };
+
+    let mut app_state = state.write().await;
+
+    // 버퍼가 가득 차면 오래된 메시지 제거
+    if app_state.chat_buffer.len() >= 100 {
+        app_state.chat_buffer.pop_front();
+    }
+
+    app_state.chat_buffer.push_back(chat_message);
+    Ok(())
+}
+
+#[tauri::command]
+async fn analyze_chat_context(state: State<'_, SharedAppState>) -> Result<ContextAnalysis, String> {
+    // Get messages with read lock
+    let messages: Vec<ChatMessage> = {
+        let app_state = state.read().await;
+        if app_state.ai_service.is_none() {
+            return Err("AI service not configured".to_string());
+        }
+        app_state.chat_buffer.iter().cloned().collect()
+    };
+
+    if messages.is_empty() {
+        return Err("No chat messages to analyze".to_string());
+    }
+
+    // Use write lock to access mutable AI service
+    let mut app_state = state.write().await;
+
+    let ai_service = app_state
+        .ai_service
+        .as_mut()
+        .ok_or("AI service not configured".to_string())?;
+
+    let context_analysis = ai_service.analyze_context(messages).await?;
+
+    // Store the analysis result
+    app_state.last_context_analysis = Some(context_analysis.clone());
+
+    Ok(context_analysis)
+}
+
+#[tauri::command]
+async fn get_script_recommendations(
+    state: State<'_, SharedAppState>,
+) -> Result<ScriptRecommendation, String> {
+    // Get context and audience with read lock
+    let (context, audience) = {
+        let app_state = state.read().await;
+
+        if app_state.ai_service.is_none() {
+            return Err("AI service not configured".to_string());
+        }
+
+        let context = app_state
+            .last_context_analysis
+            .as_ref()
+            .ok_or("No context analysis available. Please analyze chat first.".to_string())?
+            .clone();
+
+        let audience = app_state
+            .target_audience
+            .as_ref()
+            .ok_or("Target audience not configured".to_string())?
+            .clone();
+
+        (context, audience)
+    };
+
+    // Use write lock to access mutable AI service
+    let mut app_state = state.write().await;
+
+    let ai_service = app_state
+        .ai_service
+        .as_mut()
+        .ok_or("AI service not configured".to_string())?;
+
+    let recommendations = ai_service
+        .generate_script_recommendations(&context, &audience)
+        .await?;
+
+    Ok(recommendations)
+}
+
+#[tauri::command]
+async fn get_ai_status(state: State<'_, SharedAppState>) -> Result<serde_json::Value, String> {
+    let app_state = state.read().await;
+
+    let is_configured = app_state.ai_config.is_some();
+    let provider = app_state
+        .ai_config
+        .as_ref()
+        .map(|c| match c.provider {
+            AIProvider::ChatGPT => "chatgpt",
+            AIProvider::Claude => "claude",
+            AIProvider::Gemini => "gemini",
+        })
+        .unwrap_or("none");
+
+    let has_target_audience = app_state.target_audience.is_some();
+    let chat_buffer_size = app_state.chat_buffer.len();
+
+    Ok(serde_json::json!({
+        "configured": is_configured,
+        "provider": provider,
+        "has_target_audience": has_target_audience,
+        "chat_buffer_size": chat_buffer_size
+    }))
+}
+
 // 초기 상태 생성
 fn create_initial_state() -> SharedAppState {
     Arc::new(RwLock::new(AppState {
         connection_state: ChzzkState::Disconnected,
         chat_instance: None,
+        ai_config: None,
+        ai_service: None,
+        chat_buffer: VecDeque::with_capacity(100),
+        target_audience: None,
+        last_context_analysis: None,
     }))
 }
 
@@ -260,7 +448,13 @@ fn build_app() -> tauri::Builder<tauri::Wry> {
             connect_chzzk_chat,
             disconnect_chzzk_chat,
             is_chzzk_connected,
-            get_chzzk_state
+            get_chzzk_state,
+            configure_ai,
+            set_target_audience,
+            add_chat_message,
+            analyze_chat_context,
+            get_script_recommendations,
+            get_ai_status
         ])
 }
 

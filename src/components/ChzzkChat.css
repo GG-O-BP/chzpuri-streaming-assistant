@@ -1,220 +1,223 @@
 .chzzk-chat-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 .chat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background-color: #2a2a2a;
-  border-bottom: 1px solid #3a3a3a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #3a3a3a;
 }
 
 .chat-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
 }
 
 .connection-status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
 }
 
 .status-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #666;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #666;
 }
 
 .status-indicator.connected {
-  background-color: #00ff00;
-  box-shadow: 0 0 4px #00ff00;
+    background-color: #00ff00;
+    box-shadow: 0 0 4px #00ff00;
 }
 
 .status-indicator.disconnected {
-  background-color: #ff0000;
-  box-shadow: 0 0 4px #ff0000;
+    background-color: #ff0000;
+    box-shadow: 0 0 4px #ff0000;
 }
 
 .chat-controls {
-  display: flex;
-  gap: 0.5rem;
-  padding: 1rem;
-  background-color: #2a2a2a;
-  border-bottom: 1px solid #3a3a3a;
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #3a3a3a;
 }
 
 .chat-controls input {
-  flex: 1;
-  padding: 0.5rem 1rem;
-  background-color: #1a1a1a;
-  border: 1px solid #3a3a3a;
-  border-radius: 4px;
-  color: #ffffff;
-  font-size: 0.875rem;
-  transition: border-color 0.2s;
+    flex: 1;
+    padding: 0.5rem 1rem;
+    background-color: #1a1a1a;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
 }
 
 .chat-controls input:focus {
-  outline: none;
-  border-color: #5a5a5a;
+    outline: none;
+    border-color: #5a5a5a;
 }
 
 .chat-controls input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .chat-controls button {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
 .connect-btn {
-  background-color: #00d564;
-  color: #000000;
+    background-color: #00d564;
+    color: #000000;
 }
 
 .connect-btn:hover {
-  background-color: #00b855;
+    background-color: #00b855;
 }
 
 .disconnect-btn {
-  background-color: #ff4444;
-  color: #ffffff;
+    background-color: #ff4444;
+    color: #ffffff;
 }
 
 .disconnect-btn:hover {
-  background-color: #ff3333;
+    background-color: #ff3333;
 }
 
 .error-message {
-  padding: 0.75rem 1rem;
-  background-color: #ff444420;
-  color: #ff6666;
-  border-left: 3px solid #ff4444;
-  font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    background-color: #ff444420;
+    color: #ff6666;
+    border-left: 3px solid #ff4444;
+    font-size: 0.875rem;
 }
 
 .chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+    height: 400px;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .chat-messages::-webkit-scrollbar {
-  width: 8px;
+    width: 8px;
 }
 
 .chat-messages::-webkit-scrollbar-track {
-  background: #1a1a1a;
+    background: #1a1a1a;
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-  background: #3a3a3a;
-  border-radius: 4px;
+    background: #3a3a3a;
+    border-radius: 4px;
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
-  background: #4a4a4a;
+    background: #4a4a4a;
 }
 
 .chat-message,
 .donation-message,
 .system-message {
-  padding: 0.25rem 0;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  word-wrap: break-word;
+    padding: 0.25rem 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    word-wrap: break-word;
 }
 
 .chat-message {
-  color: #ffffff;
+    color: #ffffff;
 }
 
 .donation-message {
-  background-color: #ffd70020;
-  padding: 0.5rem;
-  border-radius: 4px;
-  border-left: 3px solid #ffd700;
+    background-color: #ffd70020;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid #ffd700;
 }
 
 .system-message {
-  color: #999999;
-  font-style: italic;
-  text-align: center;
-  padding: 0.5rem;
+    color: #999999;
+    font-style: italic;
+    text-align: center;
+    padding: 0.5rem;
 }
 
 .time {
-  color: #666666;
-  font-size: 0.75rem;
-  margin-right: 0.5rem;
+    color: #666666;
+    font-size: 0.75rem;
+    margin-right: 0.5rem;
 }
 
 .user-badge {
-  height: 16px;
-  vertical-align: middle;
-  margin-right: 0.25rem;
+    height: 16px;
+    vertical-align: middle;
+    margin-right: 0.25rem;
 }
 
 .nickname {
-  font-weight: 600;
-  color: #00d564;
-  margin-right: 0.25rem;
+    font-weight: 600;
+    color: #00d564;
+    margin-right: 0.25rem;
 }
 
 .separator {
-  color: #666666;
-  margin-right: 0.5rem;
+    color: #666666;
+    margin-right: 0.5rem;
 }
 
 .message {
-  color: inherit;
+    color: inherit;
 }
 
 .donation-icon {
-  margin-right: 0.5rem;
+    margin-right: 0.5rem;
 }
 
 .amount {
-  color: #ffd700;
-  font-weight: 600;
-  margin-right: 0.5rem;
+    color: #ffd700;
+    font-weight: 600;
+    margin-right: 0.5rem;
 }
 
 /* 애니메이션 */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .chat-message,
 .donation-message,
 .system-message {
-  animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.3s ease-out;
 }

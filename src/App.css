@@ -21,13 +21,29 @@
     -webkit-text-size-adjust: 100%;
 }
 
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+#root {
+    height: 100%;
+    overflow: hidden;
+}
+
 .container {
     margin: 0;
-    padding-top: 10vh;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     text-align: center;
+    height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .logo {
@@ -58,6 +74,22 @@ a:hover {
 
 h1 {
     text-align: center;
+    margin: 0;
+    padding: 1rem;
+}
+
+/* App Layout */
+.app-header {
+    flex-shrink: 0;
+    background-color: #f6f6f6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
 }
 
 input,
@@ -101,6 +133,11 @@ button {
         background-color: #2f2f2f;
     }
 
+    .app-header {
+        background-color: #1a1a1a;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
     a:hover {
         color: #24c8db;
     }
@@ -114,3 +151,657 @@ button {
         background-color: #0f0f0f69;
     }
 }
+
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    justify-content: center;
+    padding: 0 0 20px 0;
+    gap: 10px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background-color: #f0f0f0;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    background-color: #e0e0e0;
+}
+
+.tab-button.active {
+    border-color: #396cd8;
+    background-color: #396cd8;
+    color: white;
+}
+
+.tab-content {
+    padding: 20px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    min-height: 0;
+}
+
+/* AI Config Styles */
+.ai-config {
+    background-color: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.ai-config h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.config-section {
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.config-section h3 {
+    margin-bottom: 15px;
+    color: #555;
+    font-size: 1.1em;
+}
+
+.provider-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.provider-selection label {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.provider-selection label:hover {
+    background-color: #f5f5f5;
+}
+
+.provider-selection input[type="radio"] {
+    margin-right: 10px;
+}
+
+.api-key-input {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.input-field {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.toggle-visibility-btn {
+    padding: 8px 16px;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.toggle-visibility-btn:hover {
+    background-color: #555;
+}
+
+.help-text {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+}
+
+.select-field {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: white;
+}
+
+.action-buttons {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.primary-btn {
+    padding: 12px 30px;
+    background-color: #396cd8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.primary-btn:hover {
+    background-color: #2857c3;
+}
+
+.primary-btn:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+}
+
+.status-message {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Chat Analysis Styles */
+.chat-analysis {
+    background-color: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.analysis-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.auto-analyze-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.buffer-status {
+    font-size: 14px;
+    color: #666;
+}
+
+.analysis-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.analyze-btn,
+.generate-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.analyze-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.analyze-btn:hover {
+    background-color: #218838;
+}
+
+.generate-btn {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.generate-btn:hover {
+    background-color: #138496;
+}
+
+.analyze-btn:disabled,
+.generate-btn:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.warning-message {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.context-analysis-section,
+.script-recommendations-section {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.context-analysis-section h3,
+.script-recommendations-section h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.analysis-content {
+    text-align: left;
+}
+
+.analysis-item {
+    margin-bottom: 15px;
+}
+
+.analysis-item strong {
+    color: #555;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.analysis-item p {
+    margin: 0;
+    color: #666;
+}
+
+.topic-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.topic-tag {
+    padding: 4px 12px;
+    background-color: #e9ecef;
+    color: #495057;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.sentiment {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.sentiment-positive {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.sentiment-neutral {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.sentiment-negative {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.questions-list {
+    margin: 5px 0 0 20px;
+    color: #666;
+}
+
+.recommendations-info {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.info-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    background-color: #e9ecef;
+    color: #6c757d;
+}
+
+.info-badge.active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.scripts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.script-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.script-number {
+    font-size: 18px;
+    font-weight: bold;
+    color: #396cd8;
+    min-width: 30px;
+}
+
+.script-content {
+    flex: 1;
+    text-align: left;
+}
+
+.script-content p {
+    margin: 0;
+    color: #333;
+    line-height: 1.6;
+}
+
+.copy-btn {
+    padding: 6px 16px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.copy-btn:hover {
+    background-color: #5a6268;
+}
+
+.analysis-footer {
+    margin-top: 20px;
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+}
+
+/* Dark mode support for new components */
+@media (prefers-color-scheme: dark) {
+    .ai-config,
+    .chat-analysis {
+        background-color: #1a1a1a;
+    }
+
+    .config-section h3,
+    .analysis-header h2,
+    .context-analysis-section h3,
+    .script-recommendations-section h3 {
+        color: #f6f6f6;
+    }
+
+    .provider-selection label {
+        border-color: #444;
+        background-color: #2a2a2a;
+    }
+
+    .provider-selection label:hover {
+        background-color: #333;
+    }
+
+    .input-field,
+    .select-field {
+        background-color: #2a2a2a;
+        border-color: #444;
+        color: #f6f6f6;
+    }
+
+    .context-analysis-section,
+    .script-recommendations-section {
+        background-color: #2a2a2a;
+    }
+
+    .script-item {
+        background-color: #333;
+    }
+
+    .script-content p {
+        color: #f6f6f6;
+    }
+
+    .topic-tag,
+    .info-badge {
+        background-color: #444;
+        color: #f6f6f6;
+    }
+
+    .tab-button {
+        background-color: #2a2a2a;
+        color: #f6f6f6;
+    }
+
+    .tab-button:hover {
+        background-color: #333;
+    }
+}
+
+/* Loading Animations */
+.loading-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #396cd8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+.btn-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    border-top-color: #ffffff;
+    animation: spin 0.8s ease-in-out infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error Message Improvements */
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.error-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Button States */
+.analyze-btn:disabled,
+.generate-btn:disabled,
+.copy-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.analyze-btn:disabled:hover,
+.generate-btn:disabled:hover,
+.copy-btn:disabled:hover {
+    background-color: #999;
+}
+
+/* Smooth Transitions */
+.topic-tag,
+.sentiment,
+.info-badge {
+    transition: all 0.3s ease;
+}
+
+.script-item {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.script-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Copy Button Animation */
+.copy-btn {
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.copy-btn:active {
+    transform: scale(0.95);
+}
+
+.copy-btn:disabled {
+    background-color: #28a745 !important;
+}
+
+/* Fade In Animation for Analysis Results */
+.context-analysis-section,
+.script-recommendations-section {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark Mode Loading Animations */
+@media (prefers-color-scheme: dark) {
+    .loading-overlay {
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .loading-spinner {
+        border-color: #444;
+        border-top-color: #396cd8;
+    }
+
+    .loading-content p {
+        color: #f6f6f6;
+    }
+
+    .error-message {
+        background-color: rgba(248, 215, 218, 0.1);
+        border: 1px solid #f5c6cb;
+    }
