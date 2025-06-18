@@ -27,27 +27,6 @@
     color: #fff;
 }
 
-.save-button {
-    padding: 8px 24px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.save-button:hover {
-    background-color: #45a049;
-}
-
-.save-button:disabled {
-    background-color: #666;
-    cursor: not-allowed;
-}
-
 .config-message {
     padding: 12px 16px;
     border-radius: 4px;
@@ -59,7 +38,7 @@
 .config-message.success {
     background-color: rgba(76, 175, 80, 0.1);
     border: 1px solid rgba(76, 175, 80, 0.3);
-    color: #4CAF50;
+    color: #4caf50;
 }
 
 .config-message.error {
@@ -113,7 +92,7 @@
 
 .prefix-config input:focus {
     outline: none;
-    border-color: #4CAF50;
+    border-color: #4caf50;
 }
 
 .prefix-hint {
@@ -190,7 +169,7 @@
 }
 
 .toggle-label input:checked + .toggle-slider {
-    background-color: #4CAF50;
+    background-color: #4caf50;
 }
 
 .toggle-label input:checked + .toggle-slider:before {
@@ -201,7 +180,7 @@
     font-size: 16px;
     font-weight: 500;
     color: #fff;
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: "Consolas", "Monaco", monospace;
 }
 
 .command-description {
@@ -238,7 +217,7 @@
     border-radius: 4px;
     font-size: 13px;
     color: #ccc;
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: "Consolas", "Monaco", monospace;
 }
 
 .remove-alias {
@@ -268,8 +247,8 @@
 }
 
 .add-alias:hover {
-    border-color: #4CAF50;
-    color: #4CAF50;
+    border-color: #4caf50;
+    color: #4caf50;
 }
 
 .add-alias-form {
@@ -289,7 +268,7 @@
 
 .add-alias-form input:focus {
     outline: none;
-    border-color: #4CAF50;
+    border-color: #4caf50;
 }
 
 .confirm-alias,
@@ -304,7 +283,7 @@
 }
 
 .confirm-alias {
-    color: #4CAF50;
+    color: #4caf50;
 }
 
 .confirm-alias:hover {
@@ -336,9 +315,9 @@
 }
 
 .example-item code {
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: "Consolas", "Monaco", monospace;
     font-size: 14px;
-    color: #4CAF50;
+    color: #4caf50;
     background-color: #1a1a1a;
     padding: 4px 8px;
     border-radius: 4px;
@@ -360,10 +339,6 @@
         flex-direction: column;
         gap: 12px;
         align-items: flex-start;
-    }
-
-    .save-button {
-        width: 100%;
     }
 
     .config-section {
@@ -416,7 +391,7 @@
     }
 
     .prefix-config input:focus {
-        border-color: #4CAF50;
+        border-color: #4caf50;
     }
 
     .command-item {
@@ -443,8 +418,8 @@
     }
 
     .add-alias:hover {
-        border-color: #4CAF50;
-        color: #4CAF50;
+        border-color: #4caf50;
+        color: #4caf50;
     }
 
     .add-alias-form input {

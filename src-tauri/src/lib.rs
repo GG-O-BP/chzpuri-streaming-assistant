@@ -1,6 +1,7 @@
 mod ai_service;
 mod chzzk;
 mod commands;
+mod config;
 mod playlist;
 mod youtube;
 
@@ -10,11 +11,12 @@ use ai_service::{
 };
 use chzzk::ChzzkChat;
 use commands::{CommandConfig, CommandParser, ParsedCommand};
+use config::ConfigManager;
 use playlist::{PlaylistItem, PlaylistState};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::RwLock;
 use youtube::YouTubeService;
 
@@ -65,6 +67,7 @@ struct AppState {
     youtube_service: YouTubeService,
     processed_commands: HashSet<String>,
     display_messages: VecDeque<DisplayChatMessage>,
+    config_manager: ConfigManager,
 }
 
 type SharedAppState = Arc<RwLock<AppState>>;
@@ -576,9 +579,21 @@ async fn get_ai_status(state: State<'_, SharedAppState>) -> Result<serde_json::V
     }))
 }
 
-// 초기 상태 생성
-fn create_initial_state() -> SharedAppState {
-    Arc::new(RwLock::new(AppState {
+// 앱 셋업 함수
+fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let app_handle = app.handle().clone();
+
+    // ConfigManager 생성
+    let config_manager = ConfigManager::new(&app_handle)
+        .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
+
+    // 저장된 설정 로드
+    let command_config = config_manager
+        .get_command_config()
+        .unwrap_or_else(|_| CommandConfig::default());
+
+    // 초기 상태 생성
+    let state = Arc::new(RwLock::new(AppState {
         connection_state: ChzzkState::Disconnected,
         chat_instance: None,
         ai_config: None,
@@ -587,11 +602,16 @@ fn create_initial_state() -> SharedAppState {
         target_audience: None,
         last_context_analysis: None,
         playlist: PlaylistState::new(),
-        command_parser: CommandParser::new(CommandConfig::default()),
+        command_parser: CommandParser::new(command_config),
         youtube_service: YouTubeService::new(),
         processed_commands: HashSet::new(),
         display_messages: VecDeque::with_capacity(500),
-    }))
+        config_manager,
+    }));
+
+    app.manage(state);
+
+    Ok(())
 }
 
 // Process playlist command
@@ -834,8 +854,8 @@ async fn set_autoplay(
 
 #[tauri::command]
 async fn get_command_config(state: State<'_, SharedAppState>) -> Result<CommandConfig, String> {
-    let _app_state = state.read().await;
-    Ok(CommandConfig::default()) // Return default config for now
+    let app_state = state.read().await;
+    app_state.config_manager.get_command_config()
 }
 
 #[tauri::command]
@@ -844,6 +864,11 @@ async fn update_command_config(
     state: State<'_, SharedAppState>,
 ) -> Result<(), String> {
     let mut app_state = state.write().await;
+    // 설정을 파일에 저장
+    app_state
+        .config_manager
+        .update_command_config(config.clone())?;
+    // 메모리의 파서도 업데이트
     app_state.command_parser.update_config(config);
     Ok(())
 }
@@ -932,7 +957,7 @@ async fn clear_display_messages(state: State<'_, SharedAppState>) -> Result<(), 
 fn build_app() -> tauri::Builder<tauri::Wry> {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .manage(create_initial_state())
+        .setup(setup)
         .invoke_handler(tauri::generate_handler![
             connect_chzzk_chat,
             disconnect_chzzk_chat,

@@ -5,10 +5,9 @@ import "./CommandConfig.css";
 const CommandConfig = React.memo(() => {
     const [config, setConfig] = useState({
         prefix: "!",
-        commands: {}
+        commands: {},
     });
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
     const [editingCommand, setEditingCommand] = useState(null);
     const [newAlias, setNewAlias] = useState("");
@@ -31,69 +30,84 @@ const CommandConfig = React.memo(() => {
         }
     };
 
-    const saveConfig = async () => {
+    const saveConfig = async (newConfig) => {
         try {
-            setSaving(true);
-            await invoke("update_command_config", { config });
-            setMessage("설정이 저장되었습니다.");
-            setTimeout(() => setMessage(""), 3000);
+            await invoke("update_command_config", { config: newConfig });
+            setMessage("설정이 자동 저장되었습니다.");
+            setTimeout(() => setMessage(""), 2000);
         } catch (error) {
             console.error("Failed to save command config:", error);
             setMessage("설정 저장에 실패했습니다.");
-        } finally {
-            setSaving(false);
+            setTimeout(() => setMessage(""), 3000);
         }
     };
+
+    // Auto-save when config changes
+    useEffect(() => {
+        if (!loading) {
+            const timeoutId = setTimeout(() => {
+                saveConfig(config);
+            }, 500); // Debounce for 500ms
+
+            return () => clearTimeout(timeoutId);
+        }
+    }, [config, loading]);
 
     const handlePrefixChange = useCallback((e) => {
         const newPrefix = e.target.value;
         if (newPrefix.length <= 3) {
-            setConfig(prev => ({ ...prev, prefix: newPrefix }));
+            setConfig((prev) => ({ ...prev, prefix: newPrefix }));
         }
     }, []);
 
     const toggleCommand = useCallback((commandName) => {
-        setConfig(prev => ({
+        setConfig((prev) => ({
             ...prev,
             commands: {
                 ...prev.commands,
                 [commandName]: {
                     ...prev.commands[commandName],
-                    enabled: !prev.commands[commandName].enabled
-                }
-            }
+                    enabled: !prev.commands[commandName].enabled,
+                },
+            },
         }));
     }, []);
 
-    const addAlias = useCallback((commandName) => {
-        if (!newAlias.trim()) return;
+    const addAlias = useCallback(
+        (commandName) => {
+            if (!newAlias.trim()) return;
 
-        setConfig(prev => ({
-            ...prev,
-            commands: {
-                ...prev.commands,
-                [commandName]: {
-                    ...prev.commands[commandName],
-                    aliases: [...prev.commands[commandName].aliases, newAlias.trim()]
-                }
-            }
-        }));
-        setNewAlias("");
-        setEditingCommand(null);
-    }, [newAlias]);
+            setConfig((prev) => ({
+                ...prev,
+                commands: {
+                    ...prev.commands,
+                    [commandName]: {
+                        ...prev.commands[commandName],
+                        aliases: [
+                            ...prev.commands[commandName].aliases,
+                            newAlias.trim(),
+                        ],
+                    },
+                },
+            }));
+            setNewAlias("");
+            setEditingCommand(null);
+        },
+        [newAlias],
+    );
 
     const removeAlias = useCallback((commandName, aliasToRemove) => {
-        setConfig(prev => ({
+        setConfig((prev) => ({
             ...prev,
             commands: {
                 ...prev.commands,
                 [commandName]: {
                     ...prev.commands[commandName],
                     aliases: prev.commands[commandName].aliases.filter(
-                        alias => alias !== aliasToRemove
-                    )
-                }
-            }
+                        (alias) => alias !== aliasToRemove,
+                    ),
+                },
+            },
         }));
     }, []);
 
@@ -109,17 +123,12 @@ const CommandConfig = React.memo(() => {
         <div className="command-config">
             <div className="config-header">
                 <h2>명령어 설정</h2>
-                <button
-                    className="save-button"
-                    onClick={saveConfig}
-                    disabled={saving}
-                >
-                    {saving ? "저장 중..." : "설정 저장"}
-                </button>
             </div>
 
             {message && (
-                <div className={`config-message ${message.includes("실패") ? "error" : "success"}`}>
+                <div
+                    className={`config-message ${message.includes("실패") ? "error" : "success"}`}
+                >
                     {message}
                 </div>
             )}
@@ -152,12 +161,15 @@ const CommandConfig = React.memo(() => {
                                             <input
                                                 type="checkbox"
                                                 checked={command.enabled}
-                                                onChange={() => toggleCommand(key)}
+                                                onChange={() =>
+                                                    toggleCommand(key)
+                                                }
                                             />
                                             <span className="toggle-slider"></span>
                                         </label>
                                         <span className="command-text">
-                                            {config.prefix}{command.name}
+                                            {config.prefix}
+                                            {command.name}
                                         </span>
                                     </div>
                                     <p className="command-description">
@@ -171,10 +183,13 @@ const CommandConfig = React.memo(() => {
                                 <div className="aliases-list">
                                     {command.aliases.map((alias, index) => (
                                         <span key={index} className="alias-tag">
-                                            {config.prefix}{alias}
+                                            {config.prefix}
+                                            {alias}
                                             <button
                                                 className="remove-alias"
-                                                onClick={() => removeAlias(key, alias)}
+                                                onClick={() =>
+                                                    removeAlias(key, alias)
+                                                }
                                                 title="별칭 제거"
                                             >
                                                 ×
@@ -186,7 +201,9 @@ const CommandConfig = React.memo(() => {
                                             <input
                                                 type="text"
                                                 value={newAlias}
-                                                onChange={(e) => setNewAlias(e.target.value)}
+                                                onChange={(e) =>
+                                                    setNewAlias(e.target.value)
+                                                }
                                                 placeholder="새 별칭"
                                                 onKeyPress={(e) => {
                                                     if (e.key === "Enter") {
@@ -213,7 +230,9 @@ const CommandConfig = React.memo(() => {
                                     ) : (
                                         <button
                                             className="add-alias"
-                                            onClick={() => setEditingCommand(key)}
+                                            onClick={() =>
+                                                setEditingCommand(key)
+                                            }
                                         >
                                             + 별칭 추가
                                         </button>
@@ -229,7 +248,10 @@ const CommandConfig = React.memo(() => {
                 <h3>사용 예시</h3>
                 <div className="examples">
                     <div className="example-item">
-                        <code>{config.prefix}playlist https://youtube.com/watch?v=...</code>
+                        <code>
+                            {config.prefix}playlist
+                            https://youtube.com/watch?v=...
+                        </code>
                         <span>YouTube URL로 곡 추가</span>
                     </div>
                     <div className="example-item">

@@ -41,7 +41,7 @@ impl Default for CommandConfig {
             "playlist".to_string(),
             CommandDefinition {
                 name: "playlist".to_string(),
-                aliases: vec!["pl".to_string(), "play".to_string(), "음악".to_string()],
+                aliases: vec!["sr".to_string(), "신청곡".to_string()],
                 description: "Add a song to the playlist".to_string(),
                 enabled: true,
             },
