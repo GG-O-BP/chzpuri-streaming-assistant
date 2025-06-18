@@ -781,6 +781,14 @@ async fn search_youtube(
     Ok(results.videos)
 }
 
+#[tauri::command]
+async fn skip_to_next_command(
+    state: State<'_, SharedAppState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    skip_to_next(state.inner().clone(), app_handle).await
+}
+
 // 앱 빌더 함수
 fn build_app() -> tauri::Builder<tauri::Wry> {
     tauri::Builder::default()
@@ -805,7 +813,8 @@ fn build_app() -> tauri::Builder<tauri::Wry> {
             get_command_config,
             update_command_config,
             add_to_playlist_direct,
-            search_youtube
+            search_youtube,
+            skip_to_next_command
         ])
 }
 

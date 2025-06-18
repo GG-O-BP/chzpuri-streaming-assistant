@@ -231,7 +231,7 @@ const Playlist = React.memo(() => {
                         className="playlist-control-button"
                         onClick={async () => {
                             try {
-                                await invoke("skip_to_next");
+                                await invoke("skip_to_next_command");
                             } catch (error) {
                                 console.error("Failed to skip:", error);
                             }

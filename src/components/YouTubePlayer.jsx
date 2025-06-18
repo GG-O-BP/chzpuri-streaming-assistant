@@ -9,12 +9,23 @@ const YouTubePlayer = React.memo(() => {
     const [currentVideo, setCurrentVideo] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [autoplay, setAutoplay] = useState(true);
-    const [volume, setVolume] = useState(100);
-    const [duration, setDuration] = useState(0);
-    const [currentTime, setCurrentTime] = useState(0);
     const [isApiReady, setIsApiReady] = useState(false);
     const [initError, setInitError] = useState(null);
     const initAttemptRef = useRef(0);
+
+    // Load playlist state on mount
+    useEffect(() => {
+        loadPlaylistState();
+    }, []);
+
+    const loadPlaylistState = async () => {
+        try {
+            const playlist = await invoke("get_playlist");
+            setAutoplay(playlist.autoplay);
+        } catch (error) {
+            console.error("Failed to load playlist state:", error);
+        }
+    };
 
     // Load YouTube IFrame API
     useEffect(() => {
@@ -143,36 +154,34 @@ const YouTubePlayer = React.memo(() => {
         }
     }, [isApiReady, player, initializePlayer]);
 
-    const onPlayerReady = useCallback(
-        (event) => {
-            console.log("YouTube player ready");
-            // Set initial volume
-            event.target.setVolume(volume);
-        },
-        [volume],
-    );
-
-    const onPlayerStateChange = useCallback((event) => {
-        const state = event.data;
-
-        switch (state) {
-            case window.YT.PlayerState.ENDED:
-                handleVideoEnded();
-                break;
-            case window.YT.PlayerState.PLAYING:
-                setIsPlaying(true);
-                updateDuration();
-                startTimeTracking();
-                break;
-            case window.YT.PlayerState.PAUSED:
-                setIsPlaying(false);
-                stopTimeTracking();
-                break;
-            case window.YT.PlayerState.BUFFERING:
-                console.log("Buffering...");
-                break;
-        }
+    const onPlayerReady = useCallback((event) => {
+        console.log("YouTube player ready");
+        // Set default volume
+        event.target.setVolume(80);
     }, []);
+
+    const onPlayerStateChange = useCallback(
+        (event) => {
+            const state = event.data;
+
+            switch (state) {
+                case window.YT.PlayerState.ENDED:
+                    console.log("Video ended, autoplay:", autoplay);
+                    handleVideoEnded();
+                    break;
+                case window.YT.PlayerState.PLAYING:
+                    setIsPlaying(true);
+                    break;
+                case window.YT.PlayerState.PAUSED:
+                    setIsPlaying(false);
+                    break;
+                case window.YT.PlayerState.BUFFERING:
+                    console.log("Buffering...");
+                    break;
+            }
+        },
+        [autoplay],
+    );
 
     const onPlayerError = useCallback((event) => {
         const errorCode = event.data;
@@ -210,43 +219,24 @@ const YouTubePlayer = React.memo(() => {
     }, []);
 
     const handleVideoEnded = useCallback(async () => {
-        console.log("Video ended");
+        console.log("Video ended, checking autoplay status...");
 
-        if (autoplay) {
-            try {
+        // Get current autoplay state from backend
+        try {
+            const playlist = await invoke("get_playlist");
+            console.log("Current playlist state:", playlist);
+
+            if (playlist.autoplay) {
+                console.log("Autoplay is enabled, playing next video...");
                 // Request next video from backend
-                await invoke("skip_to_next");
-            } catch (error) {
-                console.error("Failed to skip to next:", error);
+                await invoke("skip_to_next_command");
+            } else {
+                console.log("Autoplay is disabled");
             }
-        }
-    }, [autoplay]);
-
-    // Time tracking
-    const timeIntervalRef = useRef(null);
-
-    const startTimeTracking = useCallback(() => {
-        if (timeIntervalRef.current) return;
-
-        timeIntervalRef.current = setInterval(() => {
-            if (player && player.getCurrentTime) {
-                setCurrentTime(player.getCurrentTime());
-            }
-        }, 1000);
-    }, [player]);
-
-    const stopTimeTracking = useCallback(() => {
-        if (timeIntervalRef.current) {
-            clearInterval(timeIntervalRef.current);
-            timeIntervalRef.current = null;
+        } catch (error) {
+            console.error("Failed to handle video end:", error);
         }
     }, []);
-
-    const updateDuration = useCallback(() => {
-        if (player && player.getDuration) {
-            setDuration(player.getDuration());
-        }
-    }, [player]);
 
     // Listen for playlist events
     useEffect(() => {
@@ -267,10 +257,16 @@ const YouTubePlayer = React.memo(() => {
             }
         });
 
+        const unlistenUpdated = listen("playlist:updated", (event) => {
+            const playlist = event.payload;
+            setAutoplay(playlist.autoplay);
+        });
+
         return async () => {
             (await unlistenPlay)();
             (await unlistenPause)();
             (await unlistenResume)();
+            (await unlistenUpdated)();
         };
     }, [player]);
 
@@ -321,35 +317,6 @@ const YouTubePlayer = React.memo(() => {
         }
     }, [player, currentVideo, playVideo]);
 
-    // Player controls
-    const handlePlayPause = useCallback(() => {
-        if (!player) return;
-
-        if (isPlaying) {
-            player.pauseVideo();
-        } else {
-            player.playVideo();
-        }
-    }, [player, isPlaying]);
-
-    const handleSeek = useCallback(
-        (time) => {
-            if (!player) return;
-            player.seekTo(time, true);
-        },
-        [player],
-    );
-
-    const handleVolumeChange = useCallback(
-        (newVolume) => {
-            setVolume(newVolume);
-            if (player) {
-                player.setVolume(newVolume);
-            }
-        },
-        [player],
-    );
-
     const handleAutoplayToggle = useCallback(async () => {
         const newAutoplay = !autoplay;
         setAutoplay(newAutoplay);
@@ -360,18 +327,6 @@ const YouTubePlayer = React.memo(() => {
             console.error("Failed to update autoplay:", error);
         }
     }, [autoplay]);
-
-    // Format time for display
-    const formatTime = (seconds) => {
-        if (!seconds || isNaN(seconds)) return "0:00";
-
-        const minutes = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${minutes}:${secs.toString().padStart(2, "0")}`;
-    };
-
-    // Calculate progress percentage
-    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     return (
         <div className="youtube-player">
@@ -415,71 +370,35 @@ const YouTubePlayer = React.memo(() => {
 
             {currentVideo && (
                 <div className="player-info">
-                    <div className="video-title">{currentVideo.title}</div>
-                    <div className="video-channel">{currentVideo.channel}</div>
+                    <div className="video-info-content">
+                        <div className="video-title">{currentVideo.title}</div>
+                        <div className="video-channel">
+                            {currentVideo.channel}
+                        </div>
+                    </div>
+
+                    <button
+                        className={`autoplay-button ${autoplay ? "active" : ""}`}
+                        onClick={handleAutoplayToggle}
+                        title={autoplay ? "자동재생 켜짐" : "자동재생 꺼짐"}
+                    >
+                        <div className="autoplay-icon">
+                            {autoplay ? "🔄" : "⏸️"}
+                        </div>
+                        <div className="autoplay-text">
+                            <div className="autoplay-label">자동재생</div>
+                            <div className="autoplay-status">
+                                {autoplay ? "켜짐" : "꺼짐"}
+                            </div>
+                        </div>
+                        <div className="autoplay-description">
+                            {autoplay
+                                ? "재생이 끝나면 다음 곡을 자동으로 재생합니다"
+                                : "재생이 끝나면 정지합니다"}
+                        </div>
+                    </button>
                 </div>
             )}
-
-            <div className="player-controls">
-                <div
-                    className="progress-bar"
-                    onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const percentage = x / rect.width;
-                        handleSeek(percentage * duration);
-                    }}
-                >
-                    <div
-                        className="progress-fill"
-                        style={{ width: `${progress}%` }}
-                    ></div>
-                    <div
-                        className="progress-handle"
-                        style={{ left: `${progress}%` }}
-                    ></div>
-                </div>
-
-                <div className="controls-row">
-                    <div className="controls-left">
-                        <button
-                            className="control-button"
-                            onClick={handlePlayPause}
-                            title={isPlaying ? "일시정지" : "재생"}
-                        >
-                            {isPlaying ? "⏸️" : "▶️"}
-                        </button>
-
-                        <span className="time-display">
-                            {formatTime(currentTime)} / {formatTime(duration)}
-                        </span>
-                    </div>
-
-                    <div className="controls-right">
-                        <div className="volume-control">
-                            <span className="volume-icon">🔊</span>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={volume}
-                                onChange={(e) =>
-                                    handleVolumeChange(Number(e.target.value))
-                                }
-                                className="volume-slider"
-                            />
-                        </div>
-
-                        <button
-                            className={`control-button autoplay-button ${autoplay ? "active" : ""}`}
-                            onClick={handleAutoplayToggle}
-                            title={autoplay ? "자동재생 켜짐" : "자동재생 꺼짐"}
-                        >
-                            🔁
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 });
