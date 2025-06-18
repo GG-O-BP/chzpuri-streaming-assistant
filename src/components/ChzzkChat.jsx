@@ -238,6 +238,27 @@ const useEventHandlers = (dispatch) => {
             const message = createChatMessage(event);
             dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
 
+            // Store display message in backend
+            try {
+                await invoke("store_display_message", {
+                    message: {
+                        id: message.id,
+                        message_type: "chat",
+                        username: message.nickname,
+                        message: message.message,
+                        timestamp: message.time.getTime(),
+                        profile_image: event.profile?.userImageUrl || null,
+                        badge_url: event.profile?.badge?.imageUrl || null,
+                        donation_amount: null,
+                    },
+                });
+            } catch (err) {
+                console.error(
+                    "[ChzzkChat] Failed to store display message:",
+                    err,
+                );
+            }
+
             // AI 분석 및 명령어 처리를 위해 백엔드로 메시지 전송
             try {
                 console.log("[ChzzkChat] Sending to backend:", {
@@ -275,6 +296,27 @@ const useEventHandlers = (dispatch) => {
             const message = createDonationMessage(event);
             dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
 
+            // Store donation message in backend
+            try {
+                await invoke("store_display_message", {
+                    message: {
+                        id: message.id,
+                        message_type: "donation",
+                        username: message.nickname,
+                        message: message.message,
+                        timestamp: message.time.getTime(),
+                        profile_image: event.profile?.userImageUrl || null,
+                        badge_url: event.profile?.badge?.imageUrl || null,
+                        donation_amount: message.amount,
+                    },
+                });
+            } catch (err) {
+                console.error(
+                    "[ChzzkChat] Failed to store donation message:",
+                    err,
+                );
+            }
+
             // 후원 메시지도 AI 분석에 포함 (명령어는 제외)
             if (event.msg && !event.msg.startsWith("!")) {
                 try {
@@ -294,24 +336,87 @@ const useEventHandlers = (dispatch) => {
     );
 
     const handleSystemMessageEvent = useCallback(
-        (event) => {
+        async (event) => {
             const message = createSystemMessage(event);
             dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+
+            // Store system message in backend
+            try {
+                await invoke("store_display_message", {
+                    message: {
+                        id: message.id,
+                        message_type: "system",
+                        username: null,
+                        message: message.message,
+                        timestamp: message.time.getTime(),
+                        profile_image: null,
+                        badge_url: null,
+                        donation_amount: null,
+                    },
+                });
+            } catch (err) {
+                console.error(
+                    "[ChzzkChat] Failed to store system message:",
+                    err,
+                );
+            }
         },
         [dispatch],
     );
 
-    const handleConnectedEvent = useCallback(() => {
+    const handleConnectedEvent = useCallback(async () => {
         dispatch({ type: ActionTypes.SET_CONNECTED, payload: true });
         dispatch({ type: ActionTypes.CLEAR_ERROR });
         const message = createConnectedMessage();
         dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+
+        // Store connected message in backend
+        try {
+            await invoke("store_display_message", {
+                message: {
+                    id: message.id,
+                    message_type: "system",
+                    username: null,
+                    message: message.message,
+                    timestamp: message.time.getTime(),
+                    profile_image: null,
+                    badge_url: null,
+                    donation_amount: null,
+                },
+            });
+        } catch (err) {
+            console.error(
+                "[ChzzkChat] Failed to store connected message:",
+                err,
+            );
+        }
     }, [dispatch]);
 
-    const handleDisconnectedEvent = useCallback(() => {
+    const handleDisconnectedEvent = useCallback(async () => {
         dispatch({ type: ActionTypes.SET_CONNECTED, payload: false });
         const message = createDisconnectedMessage();
         dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
+
+        // Store disconnected message in backend
+        try {
+            await invoke("store_display_message", {
+                message: {
+                    id: message.id,
+                    message_type: "system",
+                    username: null,
+                    message: message.message,
+                    timestamp: message.time.getTime(),
+                    profile_image: null,
+                    badge_url: null,
+                    donation_amount: null,
+                },
+            });
+        } catch (err) {
+            console.error(
+                "[ChzzkChat] Failed to store disconnected message:",
+                err,
+            );
+        }
     }, [dispatch]);
 
     const handleErrorEvent = useCallback(
@@ -338,6 +443,72 @@ function ChzzkChat() {
     const unlistenRef = useRef(null);
 
     const eventHandlers = useEventHandlers(dispatch);
+
+    // Sync with backend connection state on mount
+    useEffect(() => {
+        const syncConnectionState = async () => {
+            try {
+                const isConnected = await invoke("is_chzzk_connected");
+                const connectionState = await invoke("get_chzzk_state");
+
+                console.log("[ChzzkChat] Syncing connection state:", {
+                    isConnected,
+                    connectionState,
+                });
+
+                if (isConnected) {
+                    dispatch({
+                        type: ActionTypes.SET_CONNECTED,
+                        payload: true,
+                    });
+                }
+
+                // Restore messages from backend
+                try {
+                    const storedMessages = await invoke("get_chat_messages");
+                    console.log(
+                        "[ChzzkChat] Restoring messages:",
+                        storedMessages.length,
+                    );
+
+                    storedMessages.forEach((msg) => {
+                        const restoredMessage = {
+                            id: msg.id,
+                            type: msg.message_type,
+                            nickname: msg.username,
+                            message: msg.message,
+                            time: new Date(msg.timestamp),
+                            profile: msg.profile_image
+                                ? {
+                                      userImageUrl: msg.profile_image,
+                                      badge: msg.badge_url
+                                          ? { imageUrl: msg.badge_url }
+                                          : null,
+                                  }
+                                : null,
+                            amount: msg.donation_amount,
+                        };
+                        dispatch({
+                            type: ActionTypes.ADD_MESSAGE,
+                            payload: restoredMessage,
+                        });
+                    });
+                } catch (error) {
+                    console.error(
+                        "[ChzzkChat] Failed to restore messages:",
+                        error,
+                    );
+                }
+            } catch (error) {
+                console.error(
+                    "[ChzzkChat] Failed to sync connection state:",
+                    error,
+                );
+            }
+        };
+
+        syncConnectionState();
+    }, []);
 
     // 부작용: 이벤트 리스너 설정
     useEffect(() => {
@@ -388,6 +559,16 @@ function ChzzkChat() {
         };
     }, [eventHandlers]);
 
+    // Don't clear messages when component unmounts, preserve them
+    useEffect(() => {
+        return () => {
+            // Intentionally not clearing messages here to preserve them across tab switches
+            console.log(
+                "[ChzzkChat] Component unmounting, preserving messages",
+            );
+        };
+    }, []);
+
     // 자동 스크롤
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -430,7 +611,8 @@ function ChzzkChat() {
     const handleDisconnect = useCallback(async () => {
         try {
             await invoke("disconnect_chzzk_chat");
-            dispatch({ type: ActionTypes.CLEAR_MESSAGES });
+            // Don't automatically clear messages on disconnect
+            // User can still see chat history
         } catch (err) {
             dispatch({
                 type: ActionTypes.SET_ERROR,
@@ -491,6 +673,26 @@ function ChzzkChat() {
                 ))}
                 <div ref={messagesEndRef} />
             </div>
+
+            {state.messages.length > 0 && (
+                <button
+                    className="clear-messages-btn"
+                    onClick={async () => {
+                        dispatch({ type: ActionTypes.CLEAR_MESSAGES });
+                        try {
+                            await invoke("clear_display_messages");
+                        } catch (err) {
+                            console.error(
+                                "[ChzzkChat] Failed to clear messages:",
+                                err,
+                            );
+                        }
+                    }}
+                    title="메시지 기록 지우기"
+                >
+                    🗑️
+                </button>
+            )}
         </div>
     );
 }

@@ -51,11 +51,47 @@ const App = React.memo(() => {
 
             <div className="tab-content-wrapper">
                 <div className="tab-content">
-                    {activeTab === "chat" && <ChzzkChat />}
-                    {activeTab === "ai-config" && <AIConfig />}
-                    {activeTab === "analysis" && <ChatAnalysis />}
-                    {activeTab === "playlist" && <PlaylistTab />}
-                    {activeTab === "command-config" && <CommandConfig />}
+                    <div
+                        style={{
+                            display: activeTab === "chat" ? "block" : "none",
+                        }}
+                    >
+                        <ChzzkChat />
+                    </div>
+                    <div
+                        style={{
+                            display:
+                                activeTab === "ai-config" ? "block" : "none",
+                        }}
+                    >
+                        <AIConfig />
+                    </div>
+                    <div
+                        style={{
+                            display:
+                                activeTab === "analysis" ? "block" : "none",
+                        }}
+                    >
+                        <ChatAnalysis />
+                    </div>
+                    <div
+                        style={{
+                            display:
+                                activeTab === "playlist" ? "block" : "none",
+                        }}
+                    >
+                        <PlaylistTab />
+                    </div>
+                    <div
+                        style={{
+                            display:
+                                activeTab === "command-config"
+                                    ? "block"
+                                    : "none",
+                        }}
+                    >
+                        <CommandConfig />
+                    </div>
                 </div>
             </div>
         </main>

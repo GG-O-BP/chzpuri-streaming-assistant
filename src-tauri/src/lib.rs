@@ -11,6 +11,7 @@ use ai_service::{
 use chzzk::ChzzkChat;
 use commands::{CommandConfig, CommandParser, ParsedCommand};
 use playlist::{PlaylistItem, PlaylistState};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, State};
@@ -24,6 +25,19 @@ pub enum ChzzkState {
     Connecting { channel_id: String },
     Connected { channel_id: String },
     Error { message: String },
+}
+
+// 채팅 디스플레이 메시지 저장용 구조체
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DisplayChatMessage {
+    pub id: String,
+    pub message_type: String, // "chat", "donation", "system"
+    pub username: Option<String>,
+    pub message: String,
+    pub timestamp: i64,
+    pub profile_image: Option<String>,
+    pub badge_url: Option<String>,
+    pub donation_amount: Option<i64>,
 }
 
 // 상태 변환을 위한 이벤트
@@ -50,6 +64,7 @@ struct AppState {
     command_parser: CommandParser,
     youtube_service: YouTubeService,
     processed_commands: HashSet<String>,
+    display_messages: VecDeque<DisplayChatMessage>,
 }
 
 type SharedAppState = Arc<RwLock<AppState>>;
@@ -552,6 +567,7 @@ fn create_initial_state() -> SharedAppState {
         command_parser: CommandParser::new(CommandConfig::default()),
         youtube_service: YouTubeService::new(),
         processed_commands: HashSet::new(),
+        display_messages: VecDeque::with_capacity(500),
     }))
 }
 
@@ -858,6 +874,37 @@ async fn clear_playlist_command(
     clear_playlist(state.inner().clone(), app_handle).await
 }
 
+#[tauri::command]
+async fn get_chat_messages(
+    state: State<'_, SharedAppState>,
+) -> Result<Vec<DisplayChatMessage>, String> {
+    let app_state = state.read().await;
+    Ok(app_state.display_messages.iter().cloned().collect())
+}
+
+#[tauri::command]
+async fn store_display_message(
+    message: DisplayChatMessage,
+    state: State<'_, SharedAppState>,
+) -> Result<(), String> {
+    let mut app_state = state.write().await;
+
+    // Keep only last 500 messages
+    if app_state.display_messages.len() >= 500 {
+        app_state.display_messages.pop_front();
+    }
+
+    app_state.display_messages.push_back(message);
+    Ok(())
+}
+
+#[tauri::command]
+async fn clear_display_messages(state: State<'_, SharedAppState>) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    app_state.display_messages.clear();
+    Ok(())
+}
+
 // 앱 빌더 함수
 fn build_app() -> tauri::Builder<tauri::Wry> {
     tauri::Builder::default()
@@ -884,7 +931,10 @@ fn build_app() -> tauri::Builder<tauri::Wry> {
             add_to_playlist_direct,
             search_youtube,
             skip_to_next_command,
-            clear_playlist_command
+            clear_playlist_command,
+            get_chat_messages,
+            store_display_message,
+            clear_display_messages
         ])
 }
 
