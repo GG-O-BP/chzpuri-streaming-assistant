@@ -344,11 +344,15 @@ async fn add_chat_message(
     );
 
     // Create a unique command key for deduplication
-    let command_key = format!(
+    // Use timestamp in seconds to have a wider time window for duplicate detection
+    let command_key = format!("{}-{}", username, message);
+
+    // Also create a time-based key for recent command tracking
+    let time_key = format!(
         "{}-{}-{}",
         username,
         message,
-        chrono::Utc::now().timestamp_millis()
+        chrono::Utc::now().timestamp() // Use seconds instead of milliseconds
     );
 
     // Check if message is a command
@@ -363,12 +367,24 @@ async fn add_chat_message(
         // Check if this command was already processed
         {
             let app_state = state.read().await;
-            if app_state.processed_commands.contains(&command_key) {
-                println!(
-                    "[Backend] Skipping duplicate command: key={}, msg={}",
-                    command_key, message
-                );
-                return Ok(());
+
+            // Check if exact same command was processed recently (within last 3 seconds)
+            let now = chrono::Utc::now().timestamp();
+            for processed_key in app_state.processed_commands.iter() {
+                if processed_key.starts_with(&format!("{}-", command_key)) {
+                    // Extract timestamp from the key
+                    if let Some(timestamp_str) = processed_key.split('-').last() {
+                        if let Ok(timestamp) = timestamp_str.parse::<i64>() {
+                            if now - timestamp <= 3 {
+                                println!(
+                                    "[Backend] Skipping duplicate command within 3s window: key={}, msg={}, time_diff={}s",
+                                    command_key, message, now - timestamp
+                                );
+                                return Ok(());
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -384,19 +400,26 @@ async fn add_chat_message(
             // Mark command as processed before executing
             {
                 let mut app_state = state.write().await;
-                app_state.processed_commands.insert(command_key.clone());
+                app_state.processed_commands.insert(time_key.clone());
 
-                // Clean up old commands (keep only last 100)
-                if app_state.processed_commands.len() > 100 {
-                    let to_remove: Vec<String> = app_state
-                        .processed_commands
-                        .iter()
-                        .take(app_state.processed_commands.len() - 100)
-                        .cloned()
-                        .collect();
-                    for key in to_remove {
-                        app_state.processed_commands.remove(&key);
-                    }
+                // Clean up old commands (remove commands older than 60 seconds)
+                let now = chrono::Utc::now().timestamp();
+                let to_remove: Vec<String> = app_state
+                    .processed_commands
+                    .iter()
+                    .filter(|key| {
+                        // Extract timestamp from the key
+                        if let Some(timestamp_str) = key.split('-').last() {
+                            if let Ok(timestamp) = timestamp_str.parse::<i64>() {
+                                return now - timestamp > 60;
+                            }
+                        }
+                        true // Remove if can't parse timestamp
+                    })
+                    .cloned()
+                    .collect();
+                for key in to_remove {
+                    app_state.processed_commands.remove(&key);
                 }
             }
             match command {

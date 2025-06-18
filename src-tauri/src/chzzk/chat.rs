@@ -184,10 +184,18 @@ impl ChzzkChat {
 
                     let (mut write, mut read) = ws_stream.split();
 
-                    // 연결 성공 이벤트 발생
-                    self.app_handle
-                        .emit("chzzk-chat-event", ChatEvent::Connected)?;
-                    *self.is_connected.lock().await = true;
+                    // 연결 성공 이벤트 발생 (중복 방지)
+                    {
+                        let mut is_connected = self.is_connected.lock().await;
+                        if !*is_connected {
+                            self.app_handle
+                                .emit("chzzk-chat-event", ChatEvent::Connected)?;
+                            *is_connected = true;
+                            println!("Emitted connected event and set is_connected to true");
+                        } else {
+                            println!("Already connected, skipping connected event emission");
+                        }
+                    }
 
                     // 초기 연결 메시지 전송
                     let connect_msg = serde_json::json!({

@@ -11,6 +11,7 @@ const ActionTypes = {
     CLEAR_MESSAGES: "CLEAR_MESSAGES",
     SET_ERROR: "SET_ERROR",
     CLEAR_ERROR: "CLEAR_ERROR",
+    GET_STATE: "GET_STATE",
 };
 
 // 초기 상태
@@ -101,6 +102,9 @@ const chatReducer = (state, action) => {
 
         case ActionTypes.CLEAR_ERROR:
             return { ...state, error: "" };
+
+        case ActionTypes.GET_STATE:
+            return state;
 
         default:
             return state;
@@ -365,6 +369,15 @@ const useEventHandlers = (dispatch) => {
     );
 
     const handleConnectedEvent = useCallback(async () => {
+        // Prevent duplicate connected events
+        const currentState = dispatch({ type: ActionTypes.GET_STATE });
+        if (currentState && currentState.isConnected) {
+            console.log(
+                "[ChzzkChat] Already connected, ignoring duplicate event",
+            );
+            return;
+        }
+
         dispatch({ type: ActionTypes.SET_CONNECTED, payload: true });
         dispatch({ type: ActionTypes.CLEAR_ERROR });
         const message = createConnectedMessage();
@@ -441,6 +454,7 @@ function ChzzkChat() {
     const [state, dispatch] = useReducer(chatReducer, initialState);
     const messagesEndRef = useRef(null);
     const unlistenRef = useRef(null);
+    const mountedRef = useRef(true);
 
     const eventHandlers = useEventHandlers(dispatch);
 
@@ -512,47 +526,94 @@ function ChzzkChat() {
 
     // 부작용: 이벤트 리스너 설정
     useEffect(() => {
+        let isSubscribed = true;
+        let setupInProgress = false;
+
         const setupListener = async () => {
+            // Prevent duplicate setup
+            if (setupInProgress) {
+                console.log("[ChzzkChat] Setup already in progress, skipping");
+                return;
+            }
+
+            setupInProgress = true;
+
+            // Clean up existing listener
             if (unlistenRef.current) {
-                unlistenRef.current();
+                console.log("[ChzzkChat] Removing existing listener");
+                await unlistenRef.current();
                 unlistenRef.current = null;
             }
 
-            unlistenRef.current = await listen("chzzk-chat-event", (event) => {
-                const chatEvent = event.payload;
-                console.log("[ChzzkChat] Event listener triggered:", {
-                    type: chatEvent.type,
-                    uid: chatEvent.uid,
-                    timestamp: new Date().toISOString(),
-                });
+            // Only setup new listener if component is still mounted
+            if (!isSubscribed) {
+                console.log(
+                    "[ChzzkChat] Component unmounted, skipping listener setup",
+                );
+                setupInProgress = false;
+                return;
+            }
 
-                switch (chatEvent.type) {
-                    case "chat":
-                        eventHandlers.handleChatEvent(chatEvent);
-                        break;
-                    case "donation":
-                        eventHandlers.handleDonationEvent(chatEvent);
-                        break;
-                    case "systemMessage":
-                        eventHandlers.handleSystemMessageEvent(chatEvent);
-                        break;
-                    case "connected":
-                        eventHandlers.handleConnectedEvent();
-                        break;
-                    case "disconnected":
-                        eventHandlers.handleDisconnectedEvent();
-                        break;
-                    case "error":
-                        eventHandlers.handleErrorEvent(chatEvent.message);
-                        break;
-                }
-            });
+            try {
+                console.log("[ChzzkChat] Setting up new event listener");
+                unlistenRef.current = await listen(
+                    "chzzk-chat-event",
+                    (event) => {
+                        // Check if component is still mounted before processing
+                        if (!isSubscribed) {
+                            console.log(
+                                "[ChzzkChat] Component unmounted, ignoring event",
+                            );
+                            return;
+                        }
+
+                        const chatEvent = event.payload;
+                        console.log("[ChzzkChat] Event listener triggered:", {
+                            type: chatEvent.type,
+                            uid: chatEvent.uid,
+                            timestamp: new Date().toISOString(),
+                        });
+
+                        switch (chatEvent.type) {
+                            case "chat":
+                                eventHandlers.handleChatEvent(chatEvent);
+                                break;
+                            case "donation":
+                                eventHandlers.handleDonationEvent(chatEvent);
+                                break;
+                            case "systemMessage":
+                                eventHandlers.handleSystemMessageEvent(
+                                    chatEvent,
+                                );
+                                break;
+                            case "connected":
+                                eventHandlers.handleConnectedEvent();
+                                break;
+                            case "disconnected":
+                                eventHandlers.handleDisconnectedEvent();
+                                break;
+                            case "error":
+                                eventHandlers.handleErrorEvent(
+                                    chatEvent.message,
+                                );
+                                break;
+                        }
+                    },
+                );
+                console.log("[ChzzkChat] Event listener setup complete");
+            } catch (error) {
+                console.error("[ChzzkChat] Failed to setup listener:", error);
+            } finally {
+                setupInProgress = false;
+            }
         };
 
         setupListener();
 
         return () => {
+            isSubscribed = false;
             if (unlistenRef.current) {
+                console.log("[ChzzkChat] Cleaning up listener on unmount");
                 unlistenRef.current();
                 unlistenRef.current = null;
             }
@@ -561,7 +622,9 @@ function ChzzkChat() {
 
     // Don't clear messages when component unmounts, preserve them
     useEffect(() => {
+        mountedRef.current = true;
         return () => {
+            mountedRef.current = false;
             // Intentionally not clearing messages here to preserve them across tab switches
             console.log(
                 "[ChzzkChat] Component unmounting, preserving messages",
