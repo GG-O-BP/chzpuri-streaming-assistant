@@ -1,16 +1,44 @@
 .youtube-player {
     width: 100%;
+    max-width: 100%;
     background-color: #1a1a1a;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+    transition: all 0.3s ease;
 }
 
 .player-container {
     position: relative;
     width: 100%;
+    max-width: 100%;
     padding-bottom: 56.25%; /* 16:9 aspect ratio */
     background-color: #000;
+    transition: all 0.3s ease;
+}
+
+/* Responsive container handling */
+.main-content.sidebar-open .youtube-player {
+    max-width: calc(
+        100vw - 480px
+    ); /* 400px sidebar + 80px for toggle and padding */
+}
+
+@media (min-width: 1600px) {
+    .main-content.sidebar-open .youtube-player {
+        max-width: calc(
+            100vw - 530px
+        ); /* 450px sidebar + 80px for toggle and padding */
+    }
+}
+
+@media (max-width: 1024px) {
+    .main-content.sidebar-open .youtube-player {
+        max-width: calc(
+            100vw - 430px
+        ); /* 350px sidebar + 80px for toggle and padding */
+    }
 }
 
 .player-iframe {
@@ -242,6 +270,17 @@
 }
 
 /* Responsive adjustments */
+/* Adjust for smaller container when sidebar is open */
+@media (max-width: 900px) {
+    .player-container {
+        padding-bottom: 56.25%; /* Maintain aspect ratio */
+    }
+
+    .main-content.sidebar-open .youtube-player {
+        max-width: 100%;
+    }
+}
+
 /* Mobile responsiveness */
 @media (max-width: 600px) {
     .player-info {

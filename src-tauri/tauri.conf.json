@@ -13,8 +13,8 @@
         "windows": [
             {
                 "title": "chzpuri-streaming-assistant",
-                "width": 800,
-                "height": 1024
+                "width": 1240,
+                "height": 1010
             }
         ],
         "security": {
