@@ -21,7 +21,7 @@ can't keep up with chat?? no worries hun!! Chzpuri's got you covered!! 💕
 - ✅ auto capture stream highlights!! 📸
 
 # Running the Release (Normal Users) 🎮
-download the installer from [latest release](https://github.com/your-username/chzpuri-streaming-assistant/releases/latest) & start right away!!
+download the installer from [latest release](https://github.com/GG-O-BP/chzpuri-streaming-assistant/releases) & start right away!!
 
 ## What You Need 💻
 - Windows 10 or higher (Mac coming soon yay!!)

@@ -21,7 +21,7 @@
 - ✅ 配信ハイライト自動キャプチャー！📸
 
 # リリース版を使う（一般ユーザーさん）🎮
-[最新リリース](https://github.com/your-username/chzpuri-streaming-assistant/releases/latest)からインストールファイルをダウンロードして、すぐ始められるよ〜！
+[最新リリース](https://github.com/GG-O-BP/chzpuri-streaming-assistant/releases)からインストールファイルをダウンロードして、すぐ始められるよ〜！
 
 ## 必要なもの 💻
 - Windows 10以上（Macもすぐ対応するよ〜！）
