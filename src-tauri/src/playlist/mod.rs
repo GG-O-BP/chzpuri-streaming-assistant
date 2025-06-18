@@ -160,10 +160,6 @@ impl PlaylistState {
         }
     }
 
-    pub fn get_current(&self) -> Option<&PlaylistItem> {
-        self.current_index.and_then(|idx| self.items.get(idx))
-    }
-
     pub fn clear(&mut self) {
         self.items.clear();
         self.current_index = None;

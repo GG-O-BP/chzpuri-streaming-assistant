@@ -168,15 +168,6 @@ impl CommandParser {
     pub fn update_config(&mut self, config: CommandConfig) {
         self.config = config;
     }
-
-    pub fn get_command_list(&self) -> Vec<String> {
-        self.config
-            .commands
-            .values()
-            .filter(|cmd| cmd.enabled)
-            .map(|cmd| format!("{}{} - {}", self.config.prefix, cmd.name, cmd.description))
-            .collect()
-    }
 }
 
 #[cfg(test)]

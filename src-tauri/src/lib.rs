@@ -11,7 +11,7 @@ use ai_service::{
 use chzzk::ChzzkChat;
 use commands::{CommandConfig, CommandParser, ParsedCommand};
 use playlist::{PlaylistItem, PlaylistState};
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, State};
 use tokio::sync::RwLock;
@@ -49,6 +49,7 @@ struct AppState {
     playlist: PlaylistState,
     command_parser: CommandParser,
     youtube_service: YouTubeService,
+    processed_commands: HashSet<String>,
 }
 
 type SharedAppState = Arc<RwLock<AppState>>;
@@ -320,22 +321,75 @@ async fn add_chat_message(
     state: State<'_, SharedAppState>,
     app_handle: AppHandle,
 ) -> Result<(), String> {
+    println!(
+        "[Backend] Received chat message: user={}, msg={}, time={}",
+        username,
+        message,
+        chrono::Utc::now().to_rfc3339()
+    );
+
+    // Create a unique command key for deduplication
+    let command_key = format!(
+        "{}-{}-{}",
+        username,
+        message,
+        chrono::Utc::now().timestamp_millis()
+    );
+
     // Check if message is a command
     let is_command = {
         let app_state = state.read().await;
         app_state.command_parser.is_command(&message)
     };
 
+    println!("[Backend] Is command: {}", is_command);
+
     if is_command {
+        // Check if this command was already processed
+        {
+            let app_state = state.read().await;
+            if app_state.processed_commands.contains(&command_key) {
+                println!(
+                    "[Backend] Skipping duplicate command: key={}, msg={}",
+                    command_key, message
+                );
+                return Ok(());
+            }
+        }
+
         // Process command
         let parsed_command = {
             let app_state = state.read().await;
             app_state.command_parser.parse(&message)
         };
 
+        println!("[Backend] Parsed command: {:?}", parsed_command);
+
         if let Some(command) = parsed_command {
+            // Mark command as processed before executing
+            {
+                let mut app_state = state.write().await;
+                app_state.processed_commands.insert(command_key.clone());
+
+                // Clean up old commands (keep only last 100)
+                if app_state.processed_commands.len() > 100 {
+                    let to_remove: Vec<String> = app_state
+                        .processed_commands
+                        .iter()
+                        .take(app_state.processed_commands.len() - 100)
+                        .cloned()
+                        .collect();
+                    for key in to_remove {
+                        app_state.processed_commands.remove(&key);
+                    }
+                }
+            }
             match command {
                 ParsedCommand::Playlist { query } => {
+                    println!(
+                        "[Backend] Processing playlist command: query={}, user={}",
+                        query, username
+                    );
                     // Handle playlist command
                     process_playlist_command(
                         query,
@@ -344,6 +398,7 @@ async fn add_chat_message(
                         app_handle.clone(),
                     )
                     .await?;
+                    println!("[Backend] Playlist command processed successfully");
                 }
                 ParsedCommand::Skip => {
                     skip_to_next(state.inner().clone(), app_handle.clone()).await?;
@@ -496,6 +551,7 @@ fn create_initial_state() -> SharedAppState {
         playlist: PlaylistState::new(),
         command_parser: CommandParser::new(CommandConfig::default()),
         youtube_service: YouTubeService::new(),
+        processed_commands: HashSet::new(),
     }))
 }
 
@@ -506,6 +562,11 @@ async fn process_playlist_command(
     state: SharedAppState,
     app_handle: AppHandle,
 ) -> Result<(), String> {
+    println!(
+        "[process_playlist_command] Starting: query={}, user={}",
+        query, username
+    );
+
     // Check if query is a YouTube URL
     if playlist::is_youtube_url(&query) {
         // Extract video ID

@@ -56,25 +56,6 @@ impl YouTubeService {
         Ok(YouTubeSearchResult { videos })
     }
 
-    // Get video metadata from video ID
-    pub async fn get_video_info(&self, video_id: &str) -> Result<YouTubeVideo, String> {
-        let video_url = format!("https://www.youtube.com/watch?v={}", video_id);
-
-        let response = self
-            .client
-            .get(&video_url)
-            .send()
-            .await
-            .map_err(|e| format!("Failed to fetch video info: {}", e))?;
-
-        let html = response
-            .text()
-            .await
-            .map_err(|e| format!("Failed to read response: {}", e))?;
-
-        self.parse_video_info(&html, video_id)
-    }
-
     // Parse search results from YouTube search page HTML
     fn parse_search_results(&self, html: &str, limit: usize) -> Result<Vec<YouTubeVideo>, String> {
         let mut videos = Vec::new();
@@ -163,58 +144,6 @@ impl YouTubeService {
         } else {
             Ok(videos)
         }
-    }
-
-    // Parse video info from video page HTML
-    fn parse_video_info(&self, html: &str, video_id: &str) -> Result<YouTubeVideo, String> {
-        // Try to extract title
-        let title = if let Some(start) = html.find(r#"<title>"#) {
-            let title_start = start + 7;
-            if let Some(end) = html[title_start..].find("</title>") {
-                html[title_start..title_start + end]
-                    .replace(" - YouTube", "")
-                    .trim()
-                    .to_string()
-            } else {
-                "Unknown Title".to_string()
-            }
-        } else {
-            "Unknown Title".to_string()
-        };
-
-        // Try to extract channel name
-        let channel_regex = Regex::new(r#""author":"([^"]+)""#).unwrap();
-        let channel = channel_regex
-            .captures(html)
-            .and_then(|c| c.get(1))
-            .map(|m| self.decode_unicode_escapes(m.as_str()))
-            .unwrap_or_else(|| "Unknown Channel".to_string());
-
-        // Try to extract duration
-        let duration_regex = Regex::new(r#""lengthSeconds":"(\d+)""#).unwrap();
-        let duration = duration_regex
-            .captures(html)
-            .and_then(|c| c.get(1))
-            .and_then(|m| m.as_str().parse::<u64>().ok())
-            .map(|seconds| {
-                let minutes = seconds / 60;
-                let secs = seconds % 60;
-                format!("{}:{:02}", minutes, secs)
-            });
-
-        let thumbnail = Some(format!(
-            "https://img.youtube.com/vi/{}/maxresdefault.jpg",
-            video_id
-        ));
-
-        Ok(YouTubeVideo {
-            video_id: video_id.to_string(),
-            title,
-            channel,
-            duration,
-            thumbnail,
-            url: format!("https://www.youtube.com/watch?v={}", video_id),
-        })
     }
 
     // Decode unicode escapes in strings

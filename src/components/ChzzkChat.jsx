@@ -77,8 +77,17 @@ const chatReducer = (state, action) => {
 
         case ActionTypes.ADD_MESSAGE:
             if (isDuplicateMessage(state.messages, action.payload.id)) {
+                console.log(
+                    "[ChzzkChat] Duplicate message blocked:",
+                    action.payload.id,
+                );
                 return state;
             }
+            console.log("[ChzzkChat] Adding message to state:", {
+                id: action.payload.id,
+                type: action.payload.type,
+                message: action.payload.message,
+            });
             return {
                 ...state,
                 messages: [...state.messages, action.payload],
@@ -219,11 +228,24 @@ const MessageComponent = ({ message, index }) => {
 const useEventHandlers = (dispatch) => {
     const handleChatEvent = useCallback(
         async (event) => {
+            console.log("[ChzzkChat] Received chat event:", {
+                uid: event.uid,
+                nickname: event.nickname,
+                message: event.msg,
+                time: new Date().toISOString(),
+            });
+
             const message = createChatMessage(event);
             dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
 
             // AI 분석 및 명령어 처리를 위해 백엔드로 메시지 전송
             try {
+                console.log("[ChzzkChat] Sending to backend:", {
+                    username: event.nickname,
+                    message: event.msg,
+                    isCommand: event.msg.startsWith("!"),
+                });
+
                 await invoke("add_chat_message", {
                     username: event.nickname,
                     message: event.msg,
@@ -327,6 +349,11 @@ function ChzzkChat() {
 
             unlistenRef.current = await listen("chzzk-chat-event", (event) => {
                 const chatEvent = event.payload;
+                console.log("[ChzzkChat] Event listener triggered:", {
+                    type: chatEvent.type,
+                    uid: chatEvent.uid,
+                    timestamp: new Date().toISOString(),
+                });
 
                 switch (chatEvent.type) {
                     case "chat":
