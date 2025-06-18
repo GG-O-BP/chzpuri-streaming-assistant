@@ -789,6 +789,14 @@ async fn skip_to_next_command(
     skip_to_next(state.inner().clone(), app_handle).await
 }
 
+#[tauri::command]
+async fn clear_playlist_command(
+    state: State<'_, SharedAppState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    clear_playlist(state.inner().clone(), app_handle).await
+}
+
 // 앱 빌더 함수
 fn build_app() -> tauri::Builder<tauri::Wry> {
     tauri::Builder::default()
@@ -814,7 +822,8 @@ fn build_app() -> tauri::Builder<tauri::Wry> {
             update_command_config,
             add_to_playlist_direct,
             search_youtube,
-            skip_to_next_command
+            skip_to_next_command,
+            clear_playlist_command
         ])
 }
 
