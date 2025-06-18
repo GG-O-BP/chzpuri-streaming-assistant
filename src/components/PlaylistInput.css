@@ -1,0 +1,318 @@
+.playlist-input {
+    width: 100%;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.playlist-input-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background-color: #222;
+    border-bottom: 1px solid #333;
+}
+
+.playlist-input-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.input-tabs {
+    display: flex;
+    gap: 4px;
+    background-color: #1a1a1a;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.input-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #888;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.input-tab:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #aaa;
+}
+
+.input-tab.active {
+    background-color: #333;
+    color: #fff;
+}
+
+.tab-icon {
+    font-size: 16px;
+}
+
+.tab-label {
+    font-weight: 500;
+}
+
+.playlist-input-content {
+    padding: 0;
+}
+
+.tab-content-wrapper {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.input-help {
+    padding: 20px;
+    background-color: #222;
+    border-top: 1px solid #333;
+}
+
+.input-help h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #aaa;
+}
+
+.input-help ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style: none;
+}
+
+.input-help li {
+    position: relative;
+    margin-bottom: 12px;
+    padding-left: 8px;
+    font-size: 13px;
+    color: #888;
+    line-height: 1.6;
+}
+
+.input-help li:before {
+    content: "•";
+    position: absolute;
+    left: -12px;
+    color: #555;
+}
+
+.input-help li:last-child {
+    margin-bottom: 0;
+}
+
+.input-help strong {
+    color: #aaa;
+    font-weight: 600;
+}
+
+.input-help code {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 6px;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    color: #4CAF50;
+}
+
+.input-help span {
+    display: inline-block;
+    margin-top: 4px;
+    color: #999;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .playlist-input-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .input-tabs {
+        width: 100%;
+    }
+
+    .input-tab {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .tab-icon {
+        font-size: 14px;
+    }
+
+    .tab-label {
+        font-size: 12px;
+    }
+
+    .input-help {
+        padding: 16px;
+    }
+
+    .input-help h4 {
+        font-size: 13px;
+    }
+
+    .input-help li {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .playlist-input-header {
+        padding: 12px 16px;
+    }
+
+    .playlist-input-header h3 {
+        font-size: 16px;
+    }
+
+    .input-tab {
+        padding: 6px 8px;
+    }
+
+    .tab-label {
+        display: none;
+    }
+
+    .input-help {
+        padding: 12px;
+    }
+
+    .input-help code {
+        font-size: 11px;
+    }
+}
+
+/* Light theme support */
+@media (prefers-color-scheme: light) {
+    .playlist-input {
+        background-color: #f5f5f5;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .playlist-input-header {
+        background-color: #fff;
+        border-bottom-color: #e0e0e0;
+    }
+
+    .playlist-input-header h3 {
+        color: #333;
+    }
+
+    .input-tabs {
+        background-color: #f0f0f0;
+    }
+
+    .input-tab {
+        color: #666;
+    }
+
+    .input-tab:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+        color: #555;
+    }
+
+    .input-tab.active {
+        background-color: #fff;
+        color: #333;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .input-help {
+        background-color: #fafafa;
+        border-top-color: #e0e0e0;
+    }
+
+    .input-help h4 {
+        color: #555;
+    }
+
+    .input-help li {
+        color: #666;
+    }
+
+    .input-help li:before {
+        color: #ccc;
+    }
+
+    .input-help strong {
+        color: #444;
+    }
+
+    .input-help code {
+        background-color: #f5f5f5;
+        border-color: #e0e0e0;
+        color: #2e7d32;
+    }
+
+    .input-help span {
+        color: #777;
+    }
+}
+
+/* Smooth transitions */
+.input-tab,
+.input-tab * {
+    transition: all 0.2s ease;
+}
+
+/* Focus states for accessibility */
+.input-tab:focus-visible {
+    outline: 2px solid #4CAF50;
+    outline-offset: 2px;
+}
+
+/* Hover effects */
+@media (hover: hover) {
+    .input-tab:hover .tab-icon {
+        transform: scale(1.1);
+    }
+}
+
+/* Disabled state */
+.playlist-input.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Loading state */
+.playlist-input.loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}

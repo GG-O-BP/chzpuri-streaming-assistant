@@ -1,0 +1,472 @@
+.command-config {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.command-config.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: #888;
+}
+
+.config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.config-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.save-button {
+    padding: 8px 24px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.save-button:hover {
+    background-color: #45a049;
+}
+
+.save-button:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+}
+
+.config-message {
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.config-message.success {
+    background-color: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    color: #4CAF50;
+}
+
+.config-message.error {
+    background-color: rgba(244, 67, 54, 0.1);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    color: #f44336;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.config-section {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.config-section h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.prefix-config {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.prefix-config input {
+    width: 80px;
+    padding: 8px 12px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.prefix-config input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.prefix-hint {
+    font-size: 14px;
+    color: #888;
+}
+
+.commands-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.command-item {
+    background-color: #2a2a2a;
+    border-radius: 6px;
+    padding: 16px;
+    border: 1px solid #333;
+}
+
+.command-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.command-info {
+    flex: 1;
+}
+
+.command-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.toggle-label {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.toggle-label input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #444;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.toggle-label input:checked + .toggle-slider {
+    background-color: #4CAF50;
+}
+
+.toggle-label input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.command-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.command-description {
+    margin: 0;
+    font-size: 14px;
+    color: #aaa;
+}
+
+.command-aliases {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.aliases-label {
+    font-size: 14px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.aliases-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+}
+
+.alias-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background-color: #333;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #ccc;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.remove-alias {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    margin-left: 2px;
+}
+
+.remove-alias:hover {
+    color: #ff4444;
+}
+
+.add-alias {
+    padding: 4px 12px;
+    background-color: transparent;
+    border: 1px dashed #555;
+    border-radius: 4px;
+    color: #888;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-alias:hover {
+    border-color: #4CAF50;
+    color: #4CAF50;
+}
+
+.add-alias-form {
+    display: flex;
+    gap: 4px;
+}
+
+.add-alias-form input {
+    padding: 4px 8px;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 13px;
+    width: 120px;
+}
+
+.add-alias-form input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.confirm-alias,
+.cancel-alias {
+    padding: 4px 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.confirm-alias {
+    color: #4CAF50;
+}
+
+.confirm-alias:hover {
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.cancel-alias {
+    color: #f44336;
+}
+
+.cancel-alias:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.examples {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.example-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #333;
+}
+
+.example-item code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    color: #4CAF50;
+    background-color: #1a1a1a;
+    padding: 4px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.example-item span {
+    font-size: 14px;
+    color: #aaa;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .command-config {
+        padding: 12px;
+    }
+
+    .config-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .save-button {
+        width: 100%;
+    }
+
+    .config-section {
+        padding: 16px;
+    }
+
+    .command-item {
+        padding: 12px;
+    }
+
+    .command-aliases {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .aliases-list {
+        width: 100%;
+    }
+
+    .example-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .example-item code {
+        font-size: 12px;
+    }
+}
+
+/* Light theme support */
+@media (prefers-color-scheme: light) {
+    .config-header h2 {
+        color: #333;
+    }
+
+    .config-section {
+        background-color: #f5f5f5;
+        border: 1px solid #e0e0e0;
+    }
+
+    .config-section h3 {
+        color: #333;
+    }
+
+    .prefix-config input {
+        background-color: #fff;
+        border-color: #ddd;
+        color: #333;
+    }
+
+    .prefix-config input:focus {
+        border-color: #4CAF50;
+    }
+
+    .command-item {
+        background-color: #fff;
+        border-color: #e0e0e0;
+    }
+
+    .command-text {
+        color: #333;
+    }
+
+    .command-description {
+        color: #666;
+    }
+
+    .alias-tag {
+        background-color: #f0f0f0;
+        color: #555;
+    }
+
+    .add-alias {
+        border-color: #ccc;
+        color: #666;
+    }
+
+    .add-alias:hover {
+        border-color: #4CAF50;
+        color: #4CAF50;
+    }
+
+    .add-alias-form input {
+        background-color: #f5f5f5;
+        border-color: #ddd;
+        color: #333;
+    }
+
+    .example-item {
+        background-color: #fff;
+        border-color: #e0e0e0;
+    }
+
+    .example-item code {
+        background-color: #f5f5f5;
+    }
+
+    .example-item span {
+        color: #666;
+    }
+
+    .command-config.loading {
+        color: #666;
+    }
+}

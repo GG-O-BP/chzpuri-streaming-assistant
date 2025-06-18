@@ -222,14 +222,27 @@ const useEventHandlers = (dispatch) => {
             const message = createChatMessage(event);
             dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
 
-            // AI 분석을 위해 백엔드로 메시지 전송
+            // AI 분석 및 명령어 처리를 위해 백엔드로 메시지 전송
             try {
                 await invoke("add_chat_message", {
                     username: event.nickname,
                     message: event.msg,
                 });
             } catch (err) {
-                console.error("Failed to buffer message for AI:", err);
+                console.error("Failed to send message to backend:", err);
+                // 명령어 처리 실패 시 시스템 메시지로 알림
+                if (event.msg.startsWith("!")) {
+                    const errorMessage = {
+                        type: "system",
+                        id: `error-${Date.now()}`,
+                        message: `명령어 처리 중 오류가 발생했습니다: ${err}`,
+                        time: new Date(),
+                    };
+                    dispatch({
+                        type: ActionTypes.ADD_MESSAGE,
+                        payload: errorMessage,
+                    });
+                }
             }
         },
         [dispatch],
@@ -240,8 +253,8 @@ const useEventHandlers = (dispatch) => {
             const message = createDonationMessage(event);
             dispatch({ type: ActionTypes.ADD_MESSAGE, payload: message });
 
-            // 후원 메시지도 AI 분석에 포함
-            if (event.msg) {
+            // 후원 메시지도 AI 분석에 포함 (명령어는 제외)
+            if (event.msg && !event.msg.startsWith("!")) {
                 try {
                     await invoke("add_chat_message", {
                         username: event.nickname || "익명의 후원자",
@@ -249,7 +262,7 @@ const useEventHandlers = (dispatch) => {
                     });
                 } catch (err) {
                     console.error(
-                        "Failed to buffer donation message for AI:",
+                        "Failed to send donation message to backend:",
                         err,
                     );
                 }

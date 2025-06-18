@@ -1,15 +1,21 @@
 mod ai_service;
 mod chzzk;
+mod commands;
+mod playlist;
+mod youtube;
 
 use ai_service::{
     AIConfig, AIProvider, AIService, ChatMessage, ContextAnalysis, ScriptRecommendation,
     TargetAudience,
 };
 use chzzk::ChzzkChat;
+use commands::{CommandConfig, CommandParser, ParsedCommand};
+use playlist::{PlaylistItem, PlaylistState};
 use std::collections::VecDeque;
 use std::sync::Arc;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Emitter, State};
 use tokio::sync::RwLock;
+use youtube::YouTubeService;
 
 // 상태 타입
 #[derive(Debug, Clone)]
@@ -40,6 +46,9 @@ struct AppState {
     chat_buffer: VecDeque<ChatMessage>,
     target_audience: Option<TargetAudience>,
     last_context_analysis: Option<ContextAnalysis>,
+    playlist: PlaylistState,
+    command_parser: CommandParser,
+    youtube_service: YouTubeService,
 }
 
 type SharedAppState = Arc<RwLock<AppState>>;
@@ -309,7 +318,55 @@ async fn add_chat_message(
     username: String,
     message: String,
     state: State<'_, SharedAppState>,
+    app_handle: AppHandle,
 ) -> Result<(), String> {
+    // Check if message is a command
+    let is_command = {
+        let app_state = state.read().await;
+        app_state.command_parser.is_command(&message)
+    };
+
+    if is_command {
+        // Process command
+        let parsed_command = {
+            let app_state = state.read().await;
+            app_state.command_parser.parse(&message)
+        };
+
+        if let Some(command) = parsed_command {
+            match command {
+                ParsedCommand::Playlist { query } => {
+                    // Handle playlist command
+                    process_playlist_command(
+                        query,
+                        username.clone(),
+                        state.inner().clone(),
+                        app_handle.clone(),
+                    )
+                    .await?;
+                }
+                ParsedCommand::Skip => {
+                    skip_to_next(state.inner().clone(), app_handle.clone()).await?;
+                }
+                ParsedCommand::Previous => {
+                    go_to_previous(state.inner().clone(), app_handle.clone()).await?;
+                }
+                ParsedCommand::Pause => {
+                    pause_playback(state.inner().clone(), app_handle.clone()).await?;
+                }
+                ParsedCommand::Play => {
+                    resume_playback(state.inner().clone(), app_handle.clone()).await?;
+                }
+                ParsedCommand::Clear => {
+                    clear_playlist(state.inner().clone(), app_handle.clone()).await?;
+                }
+                ParsedCommand::Unknown { .. } => {
+                    // Ignore unknown commands
+                }
+            }
+        }
+    }
+
     let chat_message = ChatMessage {
         username,
         message,
@@ -436,7 +493,292 @@ fn create_initial_state() -> SharedAppState {
         chat_buffer: VecDeque::with_capacity(100),
         target_audience: None,
         last_context_analysis: None,
+        playlist: PlaylistState::new(),
+        command_parser: CommandParser::new(CommandConfig::default()),
+        youtube_service: YouTubeService::new(),
     }))
+}
+
+// Process playlist command
+async fn process_playlist_command(
+    query: String,
+    username: String,
+    state: SharedAppState,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    // Check if query is a YouTube URL
+    if playlist::is_youtube_url(&query) {
+        // Extract video ID
+        if let Some(video_id) = playlist::extract_youtube_id(&query) {
+            // Get video info
+            let video_info = {
+                let app_state = state.read().await;
+                app_state
+                    .youtube_service
+                    .get_video_info_oembed(&video_id)
+                    .await
+            };
+
+            match video_info {
+                Ok(video) => {
+                    // Add to playlist
+                    let item = PlaylistItem {
+                        id: uuid::Uuid::new_v4().to_string(),
+                        video_id: video.video_id,
+                        title: video.title,
+                        channel: video.channel,
+                        duration: video.duration,
+                        thumbnail: video.thumbnail,
+                        url: video.url,
+                        added_by: username,
+                        added_at: chrono::Utc::now().timestamp(),
+                    };
+
+                    let mut app_state = state.write().await;
+                    app_state.playlist.add_item(item.clone());
+
+                    // Emit event
+                    app_handle
+                        .emit("playlist:added", &item)
+                        .map_err(|e| e.to_string())?;
+                    app_handle
+                        .emit("playlist:updated", &app_state.playlist)
+                        .map_err(|e| e.to_string())?;
+
+                    Ok(())
+                }
+                Err(e) => Err(format!("Failed to get video info: {}", e)),
+            }
+        } else {
+            Err("Invalid YouTube URL".to_string())
+        }
+    } else {
+        // Search YouTube
+        let search_results = {
+            let app_state = state.read().await;
+            app_state.youtube_service.search(&query, 1).await
+        };
+
+        match search_results {
+            Ok(results) => {
+                if let Some(video) = results.videos.first() {
+                    // Add first result to playlist
+                    let item = PlaylistItem {
+                        id: uuid::Uuid::new_v4().to_string(),
+                        video_id: video.video_id.clone(),
+                        title: video.title.clone(),
+                        channel: video.channel.clone(),
+                        duration: video.duration.clone(),
+                        thumbnail: video.thumbnail.clone(),
+                        url: video.url.clone(),
+                        added_by: username,
+                        added_at: chrono::Utc::now().timestamp(),
+                    };
+
+                    let mut app_state = state.write().await;
+                    app_state.playlist.add_item(item.clone());
+
+                    // Emit event
+                    app_handle
+                        .emit("playlist:added", &item)
+                        .map_err(|e| e.to_string())?;
+                    app_handle
+                        .emit("playlist:updated", &app_state.playlist)
+                        .map_err(|e| e.to_string())?;
+
+                    Ok(())
+                } else {
+                    Err("No search results found".to_string())
+                }
+            }
+            Err(e) => Err(format!("Search failed: {}", e)),
+        }
+    }
+}
+
+// Playlist control commands
+#[tauri::command]
+async fn get_playlist(state: State<'_, SharedAppState>) -> Result<PlaylistState, String> {
+    let app_state = state.read().await;
+    Ok(app_state.playlist.clone())
+}
+
+#[tauri::command]
+async fn move_playlist_item(
+    from: usize,
+    to: usize,
+    state: State<'_, SharedAppState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    app_state.playlist.move_item(from, to)?;
+    app_handle
+        .emit("playlist:updated", &app_state.playlist)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn remove_playlist_item(
+    index: usize,
+    state: State<'_, SharedAppState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    app_state.playlist.remove_item(index);
+    app_handle
+        .emit("playlist:updated", &app_state.playlist)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn play_at_index(
+    index: usize,
+    state: State<'_, SharedAppState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    if let Some(item) = app_state.playlist.play_at(index) {
+        app_handle
+            .emit("playlist:play", item)
+            .map_err(|e| e.to_string())?;
+        app_handle
+            .emit("playlist:updated", &app_state.playlist)
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    } else {
+        Err("Invalid playlist index".to_string())
+    }
+}
+
+async fn skip_to_next(state: SharedAppState, app_handle: AppHandle) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    if let Some(item) = app_state.playlist.next() {
+        app_handle
+            .emit("playlist:play", item)
+            .map_err(|e| e.to_string())?;
+        app_handle
+            .emit("playlist:updated", &app_state.playlist)
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    } else {
+        Err("No next item in playlist".to_string())
+    }
+}
+
+async fn go_to_previous(state: SharedAppState, app_handle: AppHandle) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    if let Some(item) = app_state.playlist.previous() {
+        app_handle
+            .emit("playlist:play", item)
+            .map_err(|e| e.to_string())?;
+        app_handle
+            .emit("playlist:updated", &app_state.playlist)
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    } else {
+        Err("No previous item in playlist".to_string())
+    }
+}
+
+async fn pause_playback(state: SharedAppState, app_handle: AppHandle) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    app_state.playlist.is_playing = false;
+    app_handle
+        .emit("playlist:pause", ())
+        .map_err(|e| e.to_string())?;
+    app_handle
+        .emit("playlist:updated", &app_state.playlist)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+async fn resume_playback(state: SharedAppState, app_handle: AppHandle) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    app_state.playlist.is_playing = true;
+    app_handle
+        .emit("playlist:resume", ())
+        .map_err(|e| e.to_string())?;
+    app_handle
+        .emit("playlist:updated", &app_state.playlist)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+async fn clear_playlist(state: SharedAppState, app_handle: AppHandle) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    app_state.playlist.clear();
+    app_handle
+        .emit("playlist:cleared", ())
+        .map_err(|e| e.to_string())?;
+    app_handle
+        .emit("playlist:updated", &app_state.playlist)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn set_autoplay(
+    enabled: bool,
+    state: State<'_, SharedAppState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    app_state.playlist.set_autoplay(enabled);
+    app_handle
+        .emit("playlist:updated", &app_state.playlist)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn get_command_config(state: State<'_, SharedAppState>) -> Result<CommandConfig, String> {
+    let _app_state = state.read().await;
+    Ok(CommandConfig::default()) // Return default config for now
+}
+
+#[tauri::command]
+async fn update_command_config(
+    config: CommandConfig,
+    state: State<'_, SharedAppState>,
+) -> Result<(), String> {
+    let mut app_state = state.write().await;
+    app_state.command_parser.update_config(config);
+    Ok(())
+}
+
+#[tauri::command]
+async fn add_to_playlist_direct(
+    query: String,
+    state: State<'_, SharedAppState>,
+    app_handle: AppHandle,
+) -> Result<String, String> {
+    // Use "App User" as the username for direct additions
+    process_playlist_command(
+        query,
+        "App User".to_string(),
+        state.inner().clone(),
+        app_handle,
+    )
+    .await?;
+    Ok("Successfully added to playlist".to_string())
+}
+
+#[tauri::command]
+async fn search_youtube(
+    query: String,
+    limit: usize,
+    state: State<'_, SharedAppState>,
+) -> Result<Vec<youtube::YouTubeVideo>, String> {
+    if query.trim().is_empty() {
+        return Err("Search query cannot be empty".to_string());
+    }
+
+    let app_state = state.read().await;
+    let results = app_state.youtube_service.search(&query, limit).await?;
+
+    Ok(results.videos)
 }
 
 // 앱 빌더 함수
@@ -454,7 +796,16 @@ fn build_app() -> tauri::Builder<tauri::Wry> {
             add_chat_message,
             analyze_chat_context,
             get_script_recommendations,
-            get_ai_status
+            get_ai_status,
+            get_playlist,
+            move_playlist_item,
+            remove_playlist_item,
+            play_at_index,
+            set_autoplay,
+            get_command_config,
+            update_command_config,
+            add_to_playlist_direct,
+            search_youtube
         ])
 }
 

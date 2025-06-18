@@ -1,0 +1,392 @@
+.playlist {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.playlist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: #222;
+    border-bottom: 1px solid #333;
+}
+
+.playlist-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.playlist-info {
+    font-size: 14px;
+    color: #888;
+}
+
+.playlist-items {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.playlist-empty {
+    padding: 48px 24px;
+    text-align: center;
+    color: #666;
+}
+
+.playlist-empty p {
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.playlist-empty-hint {
+    font-size: 12px !important;
+    color: #888;
+}
+
+.playlist-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid #2a2a2a;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    user-select: none;
+}
+
+.playlist-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.playlist-item.active {
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+.playlist-item.dragging {
+    opacity: 0.5;
+}
+
+.playlist-item.drag-over {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-top: 2px solid #ff0000;
+}
+
+.item-index {
+    width: 32px;
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.playing-icon {
+    color: #ff0000;
+}
+
+.item-thumbnail {
+    width: 60px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.item-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.item-meta {
+    font-size: 12px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.item-channel {
+    color: #aaa;
+}
+
+.meta-separator {
+    color: #555;
+    font-size: 10px;
+}
+
+.item-duration {
+    font-family: monospace;
+}
+
+.item-added-by {
+    color: #7a7;
+}
+
+.item-added-by.app-user {
+    color: #4a9eff;
+    font-weight: 500;
+}
+
+.item-added-by.chat-user {
+    color: #7a7;
+}
+
+.item-added-at {
+    color: #777;
+}
+
+.item-remove {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.item-remove:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+    color: #ff4444;
+}
+
+.playlist-controls {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    background-color: #222;
+    border-top: 1px solid #333;
+}
+
+.playlist-control-button {
+    flex: 1;
+    padding: 8px 16px;
+    background-color: #333;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.playlist-control-button:hover {
+    background-color: #444;
+}
+
+.playlist-control-button:active {
+    background-color: #555;
+}
+
+.playlist-control-button.danger {
+    background-color: #442222;
+}
+
+.playlist-control-button.danger:hover {
+    background-color: #553333;
+}
+
+/* Scrollbar styling */
+.playlist-items::-webkit-scrollbar {
+    width: 8px;
+}
+
+.playlist-items::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.playlist-items::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.playlist-items::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .playlist-header {
+        padding: 12px;
+    }
+
+    .playlist-header h3 {
+        font-size: 16px;
+    }
+
+    .playlist-item {
+        padding: 6px 12px;
+    }
+
+    .item-thumbnail {
+        width: 48px;
+        height: 36px;
+    }
+
+    .item-title {
+        font-size: 13px;
+    }
+
+    .item-meta {
+        font-size: 11px;
+    }
+
+    .playlist-control-button {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+}
+
+/* Light theme support */
+@media (prefers-color-scheme: light) {
+    .playlist {
+        background-color: #f5f5f5;
+    }
+
+    .playlist-header {
+        background-color: #fff;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .playlist-header h3 {
+        color: #333;
+    }
+
+    .playlist-info {
+        color: #666;
+    }
+
+    .playlist-item {
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .playlist-item:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .playlist-item.active {
+        background-color: rgba(255, 0, 0, 0.05);
+    }
+
+    .playlist-item.drag-over {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .item-index {
+        color: #666;
+    }
+
+    .item-title {
+        color: #333;
+    }
+
+    .item-meta {
+        color: #666;
+    }
+
+    .item-channel {
+        color: #555;
+    }
+
+    .meta-separator {
+        color: #ccc;
+    }
+
+    .item-added-by {
+        color: #4a4;
+    }
+
+    .item-added-by.app-user {
+        color: #2196f3;
+        font-weight: 500;
+    }
+
+    .item-added-by.chat-user {
+        color: #4a4;
+    }
+
+    .item-added-at {
+        color: #777;
+    }
+
+    .item-remove {
+        color: #666;
+    }
+
+    .item-remove:hover {
+        background-color: rgba(255, 0, 0, 0.05);
+        color: #cc2222;
+    }
+
+    .playlist-controls {
+        background-color: #fff;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .playlist-control-button {
+        background-color: #f0f0f0;
+        color: #333;
+    }
+
+    .playlist-control-button:hover {
+        background-color: #e0e0e0;
+    }
+
+    .playlist-control-button:active {
+        background-color: #d0d0d0;
+    }
+
+    .playlist-control-button.danger {
+        background-color: #ffeeee;
+        color: #cc2222;
+    }
+
+    .playlist-control-button.danger:hover {
+        background-color: #ffdddd;
+    }
+
+    .playlist-items::-webkit-scrollbar-track {
+        background: #f5f5f5;
+    }
+
+    .playlist-items::-webkit-scrollbar-thumb {
+        background: #ccc;
+    }
+
+    .playlist-items::-webkit-scrollbar-thumb:hover {
+        background: #bbb;
+    }
+
+    .playlist-empty {
+        color: #999;
+    }
+
+    .playlist-empty-hint {
+        color: #aaa;
+    }
+}

@@ -1,0 +1,130 @@
+.playlist-tab {
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.playlist-tab-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    height: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.player-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    gap: 20px;
+}
+
+.playlist-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+/* Responsive layout */
+@media (max-width: 1024px) {
+    .playlist-tab-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .player-section {
+        max-height: none;
+        gap: 16px;
+    }
+
+    .playlist-section {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .playlist-tab {
+        padding: 12px;
+    }
+
+    .playlist-tab-container {
+        gap: 12px;
+    }
+
+    .player-section {
+        max-height: none;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .playlist-tab {
+        padding: 8px;
+    }
+
+    .playlist-tab-container {
+        gap: 8px;
+    }
+
+    .player-section {
+        max-height: none;
+        gap: 8px;
+    }
+}
+
+/* Large screens optimization */
+@media (min-width: 1400px) {
+    .playlist-tab-container {
+        grid-template-columns: 2fr 1fr;
+    }
+}
+
+/* Height constraints for better layout */
+@media (min-height: 800px) {
+    .playlist-section {
+        max-height: calc(100vh - 120px);
+    }
+}
+
+/* Animation for smooth transitions */
+.playlist-tab-container {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Ensure proper scrolling behavior */
+.playlist-section {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Adjust for very small screens */
+@media (max-height: 600px) {
+    .playlist-tab {
+        padding: 8px;
+    }
+
+    .player-section {
+        max-height: none;
+        gap: 8px;
+    }
+
+    .playlist-section {
+        min-height: 200px;
+    }
+}

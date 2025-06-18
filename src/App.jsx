@@ -3,6 +3,8 @@ import "./App.css";
 import ChzzkChat from "./components/ChzzkChat";
 import AIConfig from "./components/AIConfig";
 import ChatAnalysis from "./components/ChatAnalysis";
+import PlaylistTab from "./components/PlaylistTab";
+import CommandConfig from "./components/CommandConfig";
 
 // props가 변경되지 않으면 리렌더링하지 않음
 const App = React.memo(() => {
@@ -32,6 +34,18 @@ const App = React.memo(() => {
                     >
                         채팅 분석
                     </button>
+                    <button
+                        className={`tab-button ${activeTab === "playlist" ? "active" : ""}`}
+                        onClick={() => setActiveTab("playlist")}
+                    >
+                        플레이리스트
+                    </button>
+                    <button
+                        className={`tab-button ${activeTab === "command-config" ? "active" : ""}`}
+                        onClick={() => setActiveTab("command-config")}
+                    >
+                        명령어 설정
+                    </button>
                 </div>
             </div>
 
@@ -40,6 +54,8 @@ const App = React.memo(() => {
                     {activeTab === "chat" && <ChzzkChat />}
                     {activeTab === "ai-config" && <AIConfig />}
                     {activeTab === "analysis" && <ChatAnalysis />}
+                    {activeTab === "playlist" && <PlaylistTab />}
+                    {activeTab === "command-config" && <CommandConfig />}
                 </div>
             </div>
         </main>

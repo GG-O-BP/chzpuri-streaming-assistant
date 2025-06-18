@@ -1,0 +1,394 @@
+.youtube-player {
+    width: 100%;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.player-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    background-color: #000;
+}
+
+.player-iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.player-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0f0f0f;
+}
+
+.placeholder-content {
+    text-align: center;
+    color: #666;
+}
+
+.placeholder-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.placeholder-content p {
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.placeholder-hint {
+    color: #888;
+    font-size: 12px !important;
+}
+
+.player-error {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(15, 15, 15, 0.95);
+    z-index: 10;
+}
+
+.error-content {
+    text-align: center;
+    color: #fff;
+    padding: 24px;
+}
+
+.error-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+    color: #ff9800;
+}
+
+.error-message {
+    margin: 8px 0 16px;
+    font-size: 16px;
+    color: #fff;
+}
+
+.retry-button {
+    padding: 10px 24px;
+    background-color: #ff0000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.retry-button:hover {
+    background-color: #cc0000;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.3);
+}
+
+.retry-button:active {
+    transform: translateY(0);
+}
+
+.player-info {
+    padding: 12px 16px;
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #333;
+}
+
+.video-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.video-channel {
+    font-size: 13px;
+    color: #aaa;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.player-controls {
+    background-color: #1a1a1a;
+    padding: 0 16px 16px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: #333;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.progress-bar:hover {
+    height: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #ff0000;
+    border-radius: 3px;
+    position: relative;
+    transition: width 0.1s ease;
+}
+
+.progress-handle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    background-color: #ff0000;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.progress-bar:hover .progress-handle {
+    opacity: 1;
+}
+
+.controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.controls-left,
+.controls-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.control-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.control-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.control-button:active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.autoplay-button {
+    opacity: 0.6;
+}
+
+.autoplay-button.active {
+    opacity: 1;
+    color: #ff0000;
+}
+
+.time-display {
+    font-size: 13px;
+    color: #ccc;
+    font-family: monospace;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.volume-icon {
+    font-size: 16px;
+    color: #ccc;
+}
+
+.volume-slider {
+    width: 80px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #333;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+    background: #ff0000;
+}
+
+.volume-slider::-moz-range-thumb:hover {
+    background: #ff0000;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .player-info {
+        padding: 8px 12px;
+    }
+
+    .video-title {
+        font-size: 14px;
+    }
+
+    .video-channel {
+        font-size: 12px;
+    }
+
+    .control-button {
+        font-size: 16px;
+        padding: 2px 6px;
+    }
+
+    .volume-slider {
+        width: 60px;
+    }
+
+    .time-display {
+        font-size: 12px;
+    }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: light) {
+    .youtube-player {
+        background-color: #f5f5f5;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .player-info {
+        background-color: #f5f5f5;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .video-title {
+        color: #333;
+    }
+
+    .video-channel {
+        color: #666;
+    }
+
+    .player-controls {
+        background-color: #f5f5f5;
+    }
+
+    .progress-bar {
+        background-color: #e0e0e0;
+    }
+
+    .control-button {
+        color: #333;
+    }
+
+    .control-button:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .control-button:active {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .time-display {
+        color: #666;
+    }
+
+    .volume-icon {
+        color: #666;
+    }
+
+    .volume-slider {
+        background: #e0e0e0;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+        background: #333;
+    }
+
+    .volume-slider::-moz-range-thumb {
+        background: #333;
+    }
+
+    .placeholder-content {
+        color: #999;
+    }
+
+    .placeholder-hint {
+        color: #aaa;
+    }
+
+    .player-error {
+        background-color: rgba(245, 245, 245, 0.95);
+    }
+
+    .error-content {
+        color: #333;
+    }
+
+    .error-icon {
+        color: #f57c00;
+    }
+
+    .error-message {
+        color: #333;
+    }
+
+    .retry-button {
+        background-color: #ff0000;
+    }
+
+    .retry-button:hover {
+        background-color: #cc0000;
+    }
+}
