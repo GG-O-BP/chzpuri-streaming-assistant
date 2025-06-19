@@ -1,7 +1,7 @@
 import { memo, useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-const ChatAnalysis = React.memo(() => {
+const ChatAnalysis = memo(() => {
     const [contextAnalysis, setContextAnalysis] = useState(null);
     const [scriptRecommendations, setScriptRecommendations] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
