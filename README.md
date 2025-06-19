@@ -16,6 +16,12 @@
 - ✅ 채팅 속도 모니터링 & 알림 ⚡
 - ✅ 스토푸리 테마 스킨 지원! (개발자의 사심 200% 🍓)
 - ✅ 방송 하이라이트 자동 캡처 📸
+- ✅ 유튜브 신청곡 플레이리스트 기능 🎵
+  - 채팅으로 실시간 신청곡 받기 (!playlist, !신청곡)
+  - 유튜브 URL 자동 감지 & 정보 가져오기
+  - 드래그 앤 드롭으로 순서 변경
+  - 자동 재생 & 스킵 기능
+  - 신청자 정보 표시
 
 # 릴리즈 실행하기 (일반 사용자) 🎮
 [최신 릴리즈](https://github.com/GG-O-BP/chzpuri-streaming-assistant/releases)에서 설치 파일 다운받고 바로 시작하세요!
@@ -86,6 +92,24 @@ deno task tauri build
 - 분위기 메이커 모드 (재밌는 드립 추천!)
 - 위로 모드 (따뜻한 말 추천)
 
+## 4. 유튜브 신청곡 플레이리스트 🎵
+### 채팅 명령어
+- **!playlist [유튜브 URL/검색어]** - 신청곡 추가
+- **!신청곡 [유튜브 URL/검색어]** - 한국어 명령어
+- **!sr [유튜브 URL/검색어]** - Song Request 약자
+- **!skip** / **!다음** - 다음 곡으로 스킵 (스트리머만)
+- **!pause** / **!정지** - 일시정지 (스트리머만)
+- **!clear** / **!초기화** - 플레이리스트 전체 삭제 (스트리머만)
+
+### 주요 기능
+- **자동 URL 감지**: 유튜브 링크 자동 인식
+- **검색 기능**: 제목으로 검색 가능
+- **실시간 동기화**: 모든 시청자와 실시간 동기화
+- **신청자 표시**: 누가 신청했는지 확인 가능
+- **드래그 앤 드롭**: 재생 순서 변경 가능
+- **썸네일 표시**: 영상 미리보기
+- **재생 시간 표시**: 영상 길이 확인
+
 # 기술 스택 🛠️
 - **Frontend**: React 18, Vite
 - **Backend**: Rust (Tauri 2.0), Deno
@@ -104,8 +128,14 @@ chzpuri-streaming-assistant/
 │   │   ├── ChzzkChat.jsx         # 치지직 채팅 연결
 │   │   ├── AIConfig.jsx          # AI 설정 화면
 │   │   ├── ChatAnalysis.jsx      # 채팅 분석 & 스크립트 추천
-│   │   └── ChatHistory.jsx      # 채팅 기록 뷰어
+│   │   ├── ChatHistory.jsx       # 채팅 기록 뷰어
 │   │   ├── ChzzkChat.css         # 치지직 채팅 스타일링
+│   │   ├── PlaylistTab.jsx       # 플레이리스트 메인 탭
+│   │   ├── Playlist.jsx          # 플레이리스트 목록 관리
+│   │   ├── YouTubePlayer.jsx     # 유튜브 플레이어
+│   │   ├── PlaylistInput.jsx     # 신청곡 입력 UI
+│   │   ├── AddToPlaylist.jsx     # 플레이리스트 추가 모달
+│   │   └── CommandConfig.jsx     # 채팅 명령어 설정
 │   ├── utils/             # 유틸리티
 │   │   ├── chatParser.js        # 채팅 파싱
 │   │   ├── translator.js        # 다국어 번역
@@ -118,10 +148,14 @@ chzpuri-streaming-assistant/
 │   │   ├── lib.rs         # 메인 Rust 로직
 │   │   ├── main.rs        # Tauri 엔트리포인트
 │   │   ├── ai_service.rs  # AI API 통합
+│   │   ├── youtube.rs     # 유튜브 API 연동
+│   │   ├── commands.rs    # 채팅 명령어 파싱
+│   │   ├── playlist/      # 플레이리스트 관리
+│   │   │   └── mod.rs     # 플레이리스트 로직
 │   │   └── chzzk/         # 치지직 채팅 모듈
-│   │   │   └── chat.rs   # 치지직 채팅 로직
-│   │   │   └── mod.rs   # 치지직 채팅 모듈 내부 모듈
-│   │   │   └── types.rs   # 치지직 채팅 모듈 내부 타입 정의
+│   │       ├── chat.rs    # 치지직 채팅 로직
+│   │       ├── mod.rs     # 치지직 채팅 모듈 내부 모듈
+│   │       └── types.rs   # 치지직 채팅 모듈 내부 타입 정의
 │   ├── Cargo.toml         # Rust 의존성
 │   └── tauri.conf.json    # Tauri 설정
 ├── public/                # 정적 파일
@@ -141,12 +175,20 @@ chzpuri-streaming-assistant/
 - [ ] 스토푸리 테마 (완전 귀여워요!)
 - [x] 채팅 속도 모니터링
 - [ ] 하이라이트 자동 감지
+- [x] 유튜브 신청곡 플레이리스트
+- [x] 채팅 명령어 시스템
 - [ ] 다국어 실시간 번역 (곧 나와요!)
 - [ ] 치지직 전체 통계 분석
 - [ ] 자동 방송 일정 생성
 - [ ] 시청자 개인별 분석
 - [ ] 콜라보 방송 지원
 - [ ] 모바일 앱 버전
+- [ ] 신청곡 대기열 시간 예측
+- [ ] 신청곡 수 제한 설정
+- [ ] 명령어 쿨타임 설정
+- [ ] 곡신청 시간 제한 설정
+- [ ] 플레이리스트 정렬우선순위에서 동일 신청자의 곡이 연속으로 나오는 경우를 후순위로
+- [ ] 플레이리스트 랜덤셔플
 
 # 문제 해결 🔧
 
@@ -160,6 +202,14 @@ chzpuri-streaming-assistant/
    - Claude: [Anthropic Console](https://console.anthropic.com/)
    - Gemini: [Google AI Studio](https://makersuite.google.com/app/apikey)
 6. **채팅 분석이 안돼요**: 최소 5개 이상의 채팅이 필요해요!
+7. **신청곡이 재생이 안돼요**:
+   - 유튜브 URL이 올바른지 확인하세요
+   - 저작권 문제로 재생이 안 될 수 있어요
+   - 지역 제한이 있는 영상일 수 있어요
+8. **플레이리스트 순서 변경이 안돼요**: 마우스로 드래그 앤 드롭하세요!
+9. **채팅 명령어가 안 먹어요**:
+   - 명령어 앞에 ! 를 붙였는지 확인
+   - 명령어 설정에서 활성화되어 있는지 확인
 
 ## 로그 위치 📝
 - Windows: `%APPDATA%\chzpuri-streaming-assistant\logs`

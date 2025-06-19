@@ -1,8 +1,8 @@
-import React from "react";
+import { memo } from "react";
 import AddToPlaylist from "./AddToPlaylist";
 import "./PlaylistInput.css";
 
-const PlaylistInput = React.memo(() => {
+const PlaylistInput = memo(() => {
     return (
         <div className="playlist-input">
             <div className="playlist-input-header">

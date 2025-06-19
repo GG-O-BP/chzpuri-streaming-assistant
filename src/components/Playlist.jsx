@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { memo, useState, useEffect, useCallback } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import "./Playlist.css";
 
-const Playlist = React.memo(() => {
+const Playlist = memo(() => {
     const [playlist, setPlaylist] = useState({
         items: [],
         current_index: null,

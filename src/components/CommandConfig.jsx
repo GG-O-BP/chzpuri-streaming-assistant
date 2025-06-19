@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { memo, useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./CommandConfig.css";
 
-const CommandConfig = React.memo(() => {
+const CommandConfig = memo(() => {
     const [config, setConfig] = useState({
         prefix: "!",
         commands: {},

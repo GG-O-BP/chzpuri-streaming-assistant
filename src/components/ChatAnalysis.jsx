@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { memo, useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
 const ChatAnalysis = React.memo(() => {

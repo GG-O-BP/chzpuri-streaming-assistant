@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { memo, useState } from "react";
 import "./App.css";
 import ChzzkChat from "./components/ChzzkChat";
 import AIConfig from "./components/AIConfig";
@@ -7,7 +7,7 @@ import PlaylistTab from "./components/PlaylistTab";
 import CommandConfig from "./components/CommandConfig";
 
 // props가 변경되지 않으면 리렌더링하지 않음
-const App = React.memo(() => {
+const App = memo(() => {
     const [activeTab, setActiveTab] = useState("chat");
 
     return (

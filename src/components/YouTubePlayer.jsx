@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { memo, useEffect, useRef, useState, useCallback } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import "./YouTubePlayer.css";
 
-const YouTubePlayer = React.memo(() => {
+const YouTubePlayer = memo(() => {
     const playerRef = useRef(null);
     const [player, setPlayer] = useState(null);
     const [currentVideo, setCurrentVideo] = useState(null);

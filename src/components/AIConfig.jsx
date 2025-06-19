@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from "react";
+import { memo, useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-const AIConfig = React.memo(() => {
+const AIConfig = memo(() => {
     const [provider, setProvider] = useState("chatgpt");
     const [apiKey, setApiKey] = useState("");
     const [isConfiguring, setIsConfiguring] = useState(false);
@@ -27,21 +27,21 @@ const AIConfig = React.memo(() => {
         try {
             const result = await invoke("configure_ai", {
                 provider,
-                apiKey: apiKey.trim()
+                apiKey: apiKey.trim(),
             });
             setConfigStatus(result);
 
             // Configure target audience after AI setup
             const interestsList = interests
                 .split(",")
-                .map(i => i.trim())
-                .filter(i => i.length > 0);
+                .map((i) => i.trim())
+                .filter((i) => i.length > 0);
 
             await invoke("set_target_audience", {
                 ageRange,
                 gender,
                 interests: interestsList,
-                contentType
+                contentType,
             });
 
             setConfigStatus("AI 서비스가 성공적으로 설정되었습니다!");
@@ -53,7 +53,7 @@ const AIConfig = React.memo(() => {
     }, [provider, apiKey, ageRange, gender, interests, contentType]);
 
     const toggleApiKeyVisibility = useCallback(() => {
-        setShowApiKey(prev => !prev);
+        setShowApiKey((prev) => !prev);
     }, []);
 
     return (
@@ -112,9 +112,12 @@ const AIConfig = React.memo(() => {
                     </button>
                 </div>
                 <small className="help-text">
-                    {provider === "chatgpt" && "OpenAI 대시보드에서 API 키를 발급받으세요."}
-                    {provider === "claude" && "Anthropic Console에서 API 키를 발급받으세요."}
-                    {provider === "gemini" && "Google AI Studio에서 API 키를 발급받으세요."}
+                    {provider === "chatgpt" &&
+                        "OpenAI 대시보드에서 API 키를 발급받으세요."}
+                    {provider === "claude" &&
+                        "Anthropic Console에서 API 키를 발급받으세요."}
+                    {provider === "gemini" &&
+                        "Google AI Studio에서 API 키를 발급받으세요."}
                 </small>
             </div>
 
@@ -193,7 +196,9 @@ const AIConfig = React.memo(() => {
             </div>
 
             {configStatus && (
-                <div className={`status-message ${configStatus.includes("실패") ? "error" : "success"}`}>
+                <div
+                    className={`status-message ${configStatus.includes("실패") ? "error" : "success"}`}
+                >
                     {configStatus}
                 </div>
             )}

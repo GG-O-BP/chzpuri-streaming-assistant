@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { memo, useState } from "react";
 import YouTubePlayer from "./YouTubePlayer";
 import Playlist from "./Playlist";
 import PlaylistInput from "./PlaylistInput";
 import "./PlaylistTab.css";
 
-const PlaylistTab = React.memo(() => {
+const PlaylistTab = memo(() => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     const toggleSidebar = () => {
