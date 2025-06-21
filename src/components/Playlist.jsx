@@ -12,6 +12,7 @@ const Playlist = memo(() => {
     });
     const [draggedIndex, setDraggedIndex] = useState(null);
     const [dragOverIndex, setDragOverIndex] = useState(null);
+    const [errorMessage, setErrorMessage] = useState("");
 
     // Load initial playlist
     useEffect(() => {
@@ -22,6 +23,19 @@ const Playlist = memo(() => {
     useEffect(() => {
         const unlisten = listen("playlist:updated", (event) => {
             setPlaylist(event.payload);
+        });
+
+        return async () => {
+            (await unlisten)();
+        };
+    }, []);
+
+    // Listen for playlist errors
+    useEffect(() => {
+        const unlisten = listen("playlist:error", (event) => {
+            setErrorMessage(event.payload);
+            // Clear error message after 5 seconds
+            setTimeout(() => setErrorMessage(""), 5000);
         });
 
         return async () => {
@@ -141,6 +155,10 @@ const Playlist = memo(() => {
                     {playlist.items.length}개 항목
                 </div>
             </div>
+
+            {errorMessage && (
+                <div className="playlist-error">{errorMessage}</div>
+            )}
 
             <div className="playlist-items">
                 {playlist.items.length === 0 ? (

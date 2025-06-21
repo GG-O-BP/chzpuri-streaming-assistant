@@ -5,6 +5,13 @@ use std::collections::HashMap;
 pub struct CommandConfig {
     pub prefix: String,
     pub commands: HashMap<String, CommandDefinition>,
+    #[serde(default)]
+    pub playlist_limits: PlaylistLimits,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PlaylistLimits {
+    pub user_limit: Option<usize>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,6 +97,7 @@ impl Default for CommandConfig {
         Self {
             prefix: "!".to_string(),
             commands,
+            playlist_limits: PlaylistLimits { user_limit: None },
         }
     }
 }
@@ -101,6 +109,10 @@ pub struct CommandParser {
 impl CommandParser {
     pub fn new(config: CommandConfig) -> Self {
         Self { config }
+    }
+
+    pub fn config(&self) -> &CommandConfig {
+        &self.config
     }
 
     pub fn parse(&self, message: &str) -> Option<ParsedCommand> {

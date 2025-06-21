@@ -298,6 +298,60 @@
     background-color: rgba(244, 67, 54, 0.1);
 }
 
+/* User limit configuration */
+.user-limit-config {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #333;
+}
+
+.limit-label {
+    display: block;
+    font-size: 14px;
+    color: #ddd;
+    margin-bottom: 8px;
+}
+
+.limit-hint {
+    font-size: 12px;
+    color: #888;
+    margin-left: 8px;
+}
+
+.limit-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.limit-input {
+    width: 80px;
+    padding: 6px 10px;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    text-align: center;
+}
+
+.limit-input:focus {
+    outline: none;
+    border-color: #4caf50;
+}
+
+.limit-suffix {
+    font-size: 14px;
+    color: #888;
+}
+
+.limit-description {
+    font-size: 12px;
+    color: #888;
+    margin: 0;
+}
+
 .examples {
     display: flex;
     flex-direction: column;
@@ -373,6 +427,36 @@
 @media (prefers-color-scheme: light) {
     .config-header h2 {
         color: #333;
+    }
+
+    .user-limit-config {
+        border-top-color: #e0e0e0;
+    }
+
+    .limit-label {
+        color: #333;
+    }
+
+    .limit-hint {
+        color: #666;
+    }
+
+    .limit-input {
+        background-color: #f5f5f5;
+        border-color: #ddd;
+        color: #333;
+    }
+
+    .limit-input:focus {
+        border-color: #4caf50;
+    }
+
+    .limit-suffix {
+        color: #666;
+    }
+
+    .limit-description {
+        color: #666;
     }
 
     .config-section {

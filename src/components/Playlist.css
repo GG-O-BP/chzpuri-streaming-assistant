@@ -32,6 +32,28 @@
     color: #888;
 }
 
+.playlist-error {
+    margin: 0 16px 12px;
+    padding: 10px 14px;
+    background-color: rgba(244, 67, 54, 0.1);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    border-radius: 4px;
+    color: #f44336;
+    font-size: 14px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .playlist-items {
     flex: 1;
     overflow-y: auto;

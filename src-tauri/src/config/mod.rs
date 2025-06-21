@@ -1,4 +1,4 @@
-use crate::commands::CommandConfig;
+use crate::commands::{CommandConfig, PlaylistLimits};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -50,10 +50,35 @@ impl ConfigManager {
         let content = fs::read_to_string(&self.config_path)
             .map_err(|e| format!("Failed to read config file: {}", e))?;
 
-        let config: AppConfig = serde_json::from_str(&content)
-            .map_err(|e| format!("Failed to parse config file: {}", e))?;
+        // Try to parse with current structure
+        match serde_json::from_str::<AppConfig>(&content) {
+            Ok(config) => Ok(config),
+            Err(_) => {
+                // Try to parse as legacy config (without playlist_limits)
+                match serde_json::from_str::<serde_json::Value>(&content) {
+                    Ok(mut json) => {
+                        // Add missing playlist_limits field if it doesn't exist
+                        if let Some(command_config) = json.get_mut("command_config") {
+                            if command_config.get("playlist_limits").is_none() {
+                                command_config["playlist_limits"] = serde_json::json!({
+                                    "user_limit": null
+                                });
+                            }
+                        }
 
-        Ok(config)
+                        // Try to parse the modified JSON
+                        let config: AppConfig = serde_json::from_value(json)
+                            .map_err(|e| format!("Failed to migrate config: {}", e))?;
+
+                        // Save the migrated config
+                        self.save(&config)?;
+
+                        Ok(config)
+                    }
+                    Err(e) => Err(format!("Failed to parse config file: {}", e)),
+                }
+            }
+        }
     }
 
     pub fn save(&self, config: &AppConfig) -> Result<(), String> {

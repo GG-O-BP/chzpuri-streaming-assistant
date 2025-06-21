@@ -145,12 +145,20 @@ chzpuri-streaming-assistant/
 - [ ] SutoPuri theme (sooo cute!!)
 - [x] chat speed monitoring
 - [ ] auto highlight detection
+- [x] YouTube song request playlist
+- [x] chat command system
 - [ ] multi-language real-time translation (coming soon!!)
 - [ ] Chzzk overall stats analysis
 - [ ] auto stream schedule generation
 - [ ] individual viewer analysis
 - [ ] collab stream support
 - [ ] mobile app version
+- [ ] song request queue time prediction
+- [x] song request limit settings
+- [ ] command cooldown settings
+- [ ] song request time limit settings
+- [ ] playlist sorting to avoid consecutive songs from same requester
+- [ ] playlist random shuffle
 
 # Troubleshooting 🔧
 

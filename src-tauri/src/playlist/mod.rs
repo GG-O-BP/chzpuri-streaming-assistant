@@ -41,6 +41,46 @@ impl PlaylistState {
         }
     }
 
+    pub fn can_user_add(&self, username: &str, user_limit: Option<usize>) -> bool {
+        // App User is not subject to limits
+        if username == "App User" {
+            return true;
+        }
+
+        // If no limit is set, allow
+        let Some(limit) = user_limit else {
+            return true;
+        };
+
+        // Count user's songs after current playing index
+        let start_index = self.current_index.unwrap_or(0);
+        let user_song_count = self
+            .items
+            .iter()
+            .skip(start_index + 1) // Count only songs after currently playing
+            .filter(|item| item.added_by == username)
+            .count();
+
+        user_song_count < limit
+    }
+
+    pub fn add_item_with_limit(
+        &mut self,
+        item: PlaylistItem,
+        user_limit: Option<usize>,
+    ) -> Result<(), String> {
+        if !self.can_user_add(&item.added_by, user_limit) {
+            return Err(format!(
+                "User {} has reached the song limit of {} songs",
+                item.added_by,
+                user_limit.unwrap_or(0)
+            ));
+        }
+
+        self.add_item(item);
+        Ok(())
+    }
+
     pub fn remove_item(&mut self, index: usize) -> Option<PlaylistItem> {
         if index >= self.items.len() {
             return None;

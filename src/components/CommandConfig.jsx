@@ -6,11 +6,13 @@ const CommandConfig = memo(() => {
     const [config, setConfig] = useState({
         prefix: "!",
         commands: {},
+        playlist_limits: { user_limit: null },
     });
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
     const [editingCommand, setEditingCommand] = useState(null);
     const [newAlias, setNewAlias] = useState("");
+    const [userLimit, setUserLimit] = useState("");
 
     // Load command configuration
     useEffect(() => {
@@ -22,6 +24,9 @@ const CommandConfig = memo(() => {
             setLoading(true);
             const commandConfig = await invoke("get_command_config");
             setConfig(commandConfig);
+            setUserLimit(
+                commandConfig.playlist_limits?.user_limit?.toString() || "",
+            );
         } catch (error) {
             console.error("Failed to load command config:", error);
             setMessage("설정을 불러오는데 실패했습니다.");
@@ -110,6 +115,24 @@ const CommandConfig = memo(() => {
             },
         }));
     }, []);
+
+    const handleUserLimitChange = useCallback((e) => {
+        const value = e.target.value;
+        if (value === "" || /^\d+$/.test(value)) {
+            setUserLimit(value);
+        }
+    }, []);
+
+    const saveUserLimit = useCallback(() => {
+        const newConfig = {
+            ...config,
+            playlist_limits: {
+                user_limit: userLimit === "" ? null : parseInt(userLimit, 10),
+            },
+        };
+        setConfig(newConfig);
+        saveConfig(newConfig);
+    }, [config, userLimit]);
 
     if (loading) {
         return (
@@ -239,6 +262,37 @@ const CommandConfig = memo(() => {
                                     )}
                                 </div>
                             </div>
+
+                            {key === "playlist" && command.enabled && (
+                                <div className="user-limit-config">
+                                    <label className="limit-label">
+                                        유저 당 신청곡 수 제한
+                                        <span className="limit-hint">
+                                            (비워두면 제한 없음)
+                                        </span>
+                                    </label>
+                                    <div className="limit-input-group">
+                                        <input
+                                            type="text"
+                                            value={userLimit}
+                                            onChange={handleUserLimitChange}
+                                            placeholder="예: 3"
+                                            className="limit-input"
+                                            onBlur={saveUserLimit}
+                                            onKeyPress={(e) => {
+                                                if (e.key === "Enter") {
+                                                    saveUserLimit();
+                                                }
+                                            }}
+                                        />
+                                        <span className="limit-suffix">곡</span>
+                                    </div>
+                                    <p className="limit-description">
+                                        현재 재생 중인 곡 이후의 곡들에만
+                                        적용됩니다.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

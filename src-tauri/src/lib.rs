@@ -626,6 +626,12 @@ async fn process_playlist_command(
         query, username
     );
 
+    // Get user limit from config
+    let user_limit = {
+        let app_state = state.read().await;
+        app_state.command_parser.config().playlist_limits.user_limit
+    };
+
     // Check if query is a YouTube URL
     if playlist::is_youtube_url(&query) {
         // Extract video ID
@@ -641,7 +647,7 @@ async fn process_playlist_command(
 
             match video_info {
                 Ok(video) => {
-                    // Add to playlist
+                    // Create playlist item
                     let item = PlaylistItem {
                         id: uuid::Uuid::new_v4().to_string(),
                         video_id: video.video_id,
@@ -654,18 +660,30 @@ async fn process_playlist_command(
                         added_at: chrono::Utc::now().timestamp(),
                     };
 
+                    // Add to playlist with limit check
                     let mut app_state = state.write().await;
-                    app_state.playlist.add_item(item.clone());
-
-                    // Emit event
-                    app_handle
-                        .emit("playlist:added", &item)
-                        .map_err(|e| e.to_string())?;
-                    app_handle
-                        .emit("playlist:updated", &app_state.playlist)
-                        .map_err(|e| e.to_string())?;
-
-                    Ok(())
+                    match app_state
+                        .playlist
+                        .add_item_with_limit(item.clone(), user_limit)
+                    {
+                        Ok(()) => {
+                            // Emit events
+                            app_handle
+                                .emit("playlist:added", &item)
+                                .map_err(|e| e.to_string())?;
+                            app_handle
+                                .emit("playlist:updated", &app_state.playlist)
+                                .map_err(|e| e.to_string())?;
+                            Ok(())
+                        }
+                        Err(e) => {
+                            // Emit error event for user limit reached
+                            app_handle
+                                .emit("playlist:error", &e)
+                                .map_err(|e| e.to_string())?;
+                            Err(e)
+                        }
+                    }
                 }
                 Err(e) => Err(format!("Failed to get video info: {}", e)),
             }
@@ -682,7 +700,7 @@ async fn process_playlist_command(
         match search_results {
             Ok(results) => {
                 if let Some(video) = results.videos.first() {
-                    // Add first result to playlist
+                    // Create playlist item from search result
                     let item = PlaylistItem {
                         id: uuid::Uuid::new_v4().to_string(),
                         video_id: video.video_id.clone(),
@@ -695,18 +713,30 @@ async fn process_playlist_command(
                         added_at: chrono::Utc::now().timestamp(),
                     };
 
+                    // Add to playlist with limit check
                     let mut app_state = state.write().await;
-                    app_state.playlist.add_item(item.clone());
-
-                    // Emit event
-                    app_handle
-                        .emit("playlist:added", &item)
-                        .map_err(|e| e.to_string())?;
-                    app_handle
-                        .emit("playlist:updated", &app_state.playlist)
-                        .map_err(|e| e.to_string())?;
-
-                    Ok(())
+                    match app_state
+                        .playlist
+                        .add_item_with_limit(item.clone(), user_limit)
+                    {
+                        Ok(()) => {
+                            // Emit events
+                            app_handle
+                                .emit("playlist:added", &item)
+                                .map_err(|e| e.to_string())?;
+                            app_handle
+                                .emit("playlist:updated", &app_state.playlist)
+                                .map_err(|e| e.to_string())?;
+                            Ok(())
+                        }
+                        Err(e) => {
+                            // Emit error event for user limit reached
+                            app_handle
+                                .emit("playlist:error", &e)
+                                .map_err(|e| e.to_string())?;
+                            Err(e)
+                        }
+                    }
                 } else {
                     Err("No search results found".to_string())
                 }
