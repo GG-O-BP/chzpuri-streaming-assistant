@@ -81,6 +81,10 @@
     vertical-align: middle;
 }
 
+.playlist-sidebar.open + .sidebar-toggle {
+    right: 400px;
+}
+
 /* Responsive layout */
 @media (max-width: 1024px) {
     .playlist-sidebar {
@@ -103,11 +107,6 @@
         right: 0;
         height: 100vh;
         z-index: 100;
-    }
-
-    .playlist-sidebar.open + .sidebar-toggle {
-        right: 400px;
-        z-index: 101;
     }
 
     .main-content.sidebar-open {
