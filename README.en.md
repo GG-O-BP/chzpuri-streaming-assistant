@@ -25,7 +25,7 @@ download the installer from [latest release](https://github.com/GG-O-BP/chzpuri-
 
 ## What You Need 💻
 - Windows 10 or higher (Mac coming soon yay!!)
-- Deno 1.40+
+- Deno 2.3+
 - Rust (developers only~)
 - Chzzk streamer account
 - AI API key (OpenAI, Claude, or Google Gemini)

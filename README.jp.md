@@ -25,7 +25,7 @@
 
 ## 必要なもの 💻
 - Windows 10以上（Macもすぐ対応するよ〜！）
-- Deno 1.40以上
+- Deno 2.3以上
 - Rust（開発者さんだけ〜）
 - チジジックストリーマーアカウント
 - AI APIキー（OpenAI、Claude、またはGoogle Geminiのいずれか）
