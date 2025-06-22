@@ -141,6 +141,7 @@ chzpuri-streaming-assistant/
 - [x] auto conversation script generation
 - [x] target audience custom coaching
 - [x] emotion analysis & visualisation
+- [ ] STT (koreadollar - Kim-dowon)
 - [ ] keyword trend analysis
 - [ ] SutoPuri theme (sooo cute!!)
 - [x] chat speed monitoring
